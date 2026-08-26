@@ -11,7 +11,8 @@ export function createLobby(handlers) {
   const waiting = document.getElementById('lobbyWaiting');
   const waitingCode = document.getElementById('waitingCode');
 
-  el.style.background = CONFIG.colors.sky;
+  // Yarı saydam zemin: arkadaki ısınma sahnesi hafifçe görünür.
+  el.style.background = CONFIG.colors.sky + 'd9';
   codeInput.maxLength = CONFIG.roomCodeLength;
 
   document.getElementById('createBtn').addEventListener('click', () => handlers.onCreate());
@@ -23,7 +24,11 @@ export function createLobby(handlers) {
     }
     handlers.onJoin(code);
   });
+  codeInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') document.getElementById('joinBtn').click();
+  });
   document.getElementById('soloBtn').addEventListener('click', () => handlers.onSolo());
+  document.getElementById('cancelWaitBtn').addEventListener('click', () => handlers.onCancel());
 
   function showMenu(text) {
     el.style.display = 'flex';

@@ -96,8 +96,44 @@
       min-width: 0 !important;
       padding: 4px !important;
     }
+    #chaosRow small {
+      width: 100%;
+      color: #6b4f2a;
+      opacity: 0.7;
+      font-size: 12px;
+    }
     #lobbyWaiting { display: none; color: #333; }
     #lobbyWaiting p { margin: 6px 0; font-size: 18px; }
+    #cancelWaitBtn {
+      background: none !important;
+      color: #6b4f2a !important;
+      border: 2px solid #6b4f2a !important;
+      font-size: 16px !important;
+      min-width: 0 !important;
+      padding: 8px 24px !important;
+      margin-top: 10px;
+    }
+    #exitBtn {
+      display: none;
+      position: fixed;
+      top: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 6;
+      font: bold 15px system-ui, sans-serif;
+      color: #333;
+      background: rgba(255, 255, 255, 0.35);
+      border: 0;
+      border-radius: 8px;
+      padding: 6px 12px;
+      cursor: pointer;
+    }
+    #rotateHint {
+      font-size: 15px;
+      font-weight: normal;
+      opacity: 0.7;
+      margin-top: 8px;
+    }
     #waitingCode {
       font-size: 56px;
       font-weight: bold;
@@ -141,6 +177,7 @@
         <label><input type="checkbox" id="chaosWind"> 🌬️ Rüzgar</label>
         <label><input type="checkbox" id="chaosBall"> 🎈 Top sürprizleri</label>
         <label><input type="checkbox" id="chaosInvert"> 🙃 Ters kontrol</label>
+        <small id="chaosHint">odayı kuran seçer</small>
       </div>
       <button id="soloBtn">Tek başına ısınma</button>
     </div>
@@ -148,10 +185,17 @@
       <p>Oda kodun:</p>
       <div id="waitingCode"></div>
       <p>Arkadaşın "Koda katıl" ile bu kodu girince oyun başlar.</p>
+      <button id="cancelWaitBtn">Vazgeç</button>
     </div>
     <p id="lobbyMsg"></p>
   </div>
-  <div id="rotate">Telefonu yatay çevir 🔄</div>
+  <button id="exitBtn">✕</button>
+  <div id="rotate">
+    <div>
+      Telefonu yatay çevir 🔄
+      <div id="rotateHint">ya da ekrana dokun, kendisi dönsün</div>
+    </div>
+  </div>
   <script type="module" src="js/main.js"></script>
 </body>
 </html>
