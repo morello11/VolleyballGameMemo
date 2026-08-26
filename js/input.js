@@ -42,14 +42,29 @@ export function createInput() {
     if (touch.clientX >= window.innerWidth / 2) {
       return { jump: true, left: false, right: false };
     }
-    return { jump: false, left: false, right: false, centerX: touch.clientX };
+    return { jump: false, left: false, right: false, centerX: touch.clientX, peakX: touch.clientX };
   }
 
   function updateZone(zone, touch) {
     if (zone.jump) return;
-    const dx = touch.clientX - zone.centerX;
+    const x = touch.clientX;
+
+    // Bir yön basılıyken parmağı geri çekmek merkezi ulaşılan ucun hemen
+    // gerisine taşır: yön değiştirmek, ne kadar sürüklenmiş olursa olsun hep
+    // aynı küçük harekettir (hafif geri çekiş durdurur, büyüğü ters yöne geçirir).
+    if (zone.left || zone.right) {
+      zone.peakX = zone.right ? Math.max(zone.peakX, x) : Math.min(zone.peakX, x);
+      if (zone.right && x < zone.peakX - CONFIG.moveDragPullback) {
+        zone.centerX = zone.peakX - CONFIG.moveDragPullback;
+      } else if (zone.left && x > zone.peakX + CONFIG.moveDragPullback) {
+        zone.centerX = zone.peakX + CONFIG.moveDragPullback;
+      }
+    }
+
+    const dx = x - zone.centerX;
     zone.left = dx < -CONFIG.moveDragDeadZone;
     zone.right = dx > CONFIG.moveDragDeadZone;
+    if (zone.left || zone.right) zone.peakX = x;
   }
 
   return {
