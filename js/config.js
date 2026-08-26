@@ -27,6 +27,7 @@ export const CONFIG = {
 
   // Dokunmatik kontrol
   moveDragDeadZone: 15, // hareket için başparmağın merkezden kayması gereken piksel
+  moveDragPullback: 25, // yön basılıyken bu kadar geri çekilmek durdurur ve merkezi sıfırlar
 
   // Fizik adımı
   physicsHz: 60,
