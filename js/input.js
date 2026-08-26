@@ -1,10 +1,14 @@
 // Dokunma ve klavye okuma. Oyun mantığı yok; sadece {left, right, jump} üretir.
-// Dokunma bölgeleri: ekranın sol yarısı hareket (yarımın solu = sol, sağı = sağ),
-// sağ yarısı zıplama. Klavye: ok tuşları + boşluk.
+// Dokunma: sol yarıda ilk basılan nokta merkez olur, başparmağı merkezin
+// sağına/soluna kaydırmak hareket ettirir (sanal joystick). Sağ yarı = zıpla.
+// Bölge, dokunuşun başladığı yere göre belirlenir ve dokunuş boyunca değişmez.
+// Klavye: ok tuşları + boşluk.
+
+import { CONFIG } from './config.js';
 
 export function createInput() {
   const keys = { left: false, right: false, jump: false };
-  const touchZones = new Map(); // dokunuş id -> o dokunuşun bölgesi
+  const touchZones = new Map(); // dokunuş id -> o dokunuşun bölgesi/durumu
 
   window.addEventListener('keydown', (e) => setKey(e, true));
   window.addEventListener('keyup', (e) => setKey(e, false));
@@ -24,15 +28,28 @@ export function createInput() {
     e.preventDefault(); // kaydırma ve çift-tık zoom'u engeller
     const ending = e.type === 'touchend' || e.type === 'touchcancel';
     for (const touch of e.changedTouches) {
-      if (ending) touchZones.delete(touch.identifier);
-      else touchZones.set(touch.identifier, zoneFor(touch));
+      if (ending) {
+        touchZones.delete(touch.identifier);
+      } else {
+        const zone = touchZones.get(touch.identifier) || newZone(touch);
+        touchZones.set(touch.identifier, zone);
+        updateZone(zone, touch);
+      }
     }
   }
 
-  function zoneFor(touch) {
-    const w = window.innerWidth;
-    if (touch.clientX >= w / 2) return { left: false, right: false, jump: true };
-    return { left: touch.clientX < w / 4, right: touch.clientX >= w / 4, jump: false };
+  function newZone(touch) {
+    if (touch.clientX >= window.innerWidth / 2) {
+      return { jump: true, left: false, right: false };
+    }
+    return { jump: false, left: false, right: false, centerX: touch.clientX };
+  }
+
+  function updateZone(zone, touch) {
+    if (zone.jump) return;
+    const dx = touch.clientX - zone.centerX;
+    zone.left = dx < -CONFIG.moveDragDeadZone;
+    zone.right = dx > CONFIG.moveDragDeadZone;
   }
 
   return {
