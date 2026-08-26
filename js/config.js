@@ -16,14 +16,15 @@ export const CONFIG = {
   jumpSpeed: 750,
   moveSpeed: 400,
   ballBounceSlime: 1.0,
-  ballBounceWall: 0.85, // duvar, zemin ve file için ortak sekme katsayısı
+  ballBounceWall: 0.85, // duvar ve file için ortak sekme katsayısı
   maxBallSpeed: 1100,
-  ballGroundFriction: 0.7, // zemine her temasta yatay hız bununla çarpılır
-  ballRestSpeed: 40, // yerde bu hızın altına düşen top yeniden doğar
+
+  // Sayı ve servis
+  servePause: 0.9, // sayı sonrası topun servis noktasında asılı beklediği saniye
 
   // Başlangıç konumları
-  slimeStartX: 200, // sol yarının ortası
-  ballSpawnHeight: 300, // top slime'ın üstünde bu yükseklikte doğar
+  slimeStartX: 200, // sol yarının ortası (sağ slime aynaya göre yerleşir)
+  ballSpawnHeight: 300, // servis topu slime'ın üstünde bu yükseklikte doğar
 
   // Dokunmatik kontrol
   moveDragDeadZone: 15, // hareket için başparmağın merkezden kayması gereken piksel
@@ -54,6 +55,9 @@ export const CONFIG = {
   hintLeftXFrac: 0.1, // "sola kaydır" ikonu (ekran genişliğine göre)
   hintRightXFrac: 0.17, // "sağa kaydır" ikonu — soldakiyle ikili, joystick'i ima eder
   hintJumpXFrac: 0.9, // "zıpla" ikonu
+  scoreSizeFrac: 0.07, // skor yazısının boyutu (ekran yüksekliğine göre)
+  scoreYFrac: 0.12, // skorun dikey konumu
+  scoreXFrac: 0.08, // skorun kendi tarafının kenarından uzaklığı
   eyeOffsetFrac: 0.45, // gözün merkezden uzaklığı (slimeRadius'a göre)
   eyeRadiusFrac: 0.18, // göz yarıçapı (slimeRadius'a göre)
   pupilShiftFrac: 0.35, // göz bebeğinin topa doğru kayması (göz yarıçapına göre)

@@ -29,9 +29,23 @@ export function createRenderer(canvas) {
     ctx.fillRect(0, groundY, w, h - groundY);
 
     drawTouchHints(w, h);
+    drawScore(state.score, w, h);
     drawNet(toX, toY, scale);
-    drawSlime(state.slime, state.ball, toX, toY, scale);
+    for (const slime of state.slimes) drawSlime(slime, state.ball, toX, toY, scale);
     drawBall(state.ball, toX, toY, scale);
+  }
+
+  function drawScore(score, w, h) {
+    const size = Math.round(h * CONFIG.scoreSizeFrac);
+    const y = h * CONFIG.scoreYFrac;
+    ctx.font = `bold ${size}px system-ui, sans-serif`;
+    ctx.textBaseline = 'top';
+    ctx.fillStyle = CONFIG.colors.leftSlime;
+    ctx.textAlign = 'left';
+    ctx.fillText(String(score[0]), w * CONFIG.scoreXFrac, y);
+    ctx.fillStyle = CONFIG.colors.rightSlime;
+    ctx.textAlign = 'right';
+    ctx.fillText(String(score[1]), w * (1 - CONFIG.scoreXFrac), y);
   }
 
   function drawNet(toX, toY, scale) {
@@ -45,7 +59,7 @@ export function createRenderer(canvas) {
     const cy = toY(slime.y);
     const r = CONFIG.slimeRadius * scale;
 
-    ctx.fillStyle = CONFIG.colors.leftSlime;
+    ctx.fillStyle = slime.side === 0 ? CONFIG.colors.leftSlime : CONFIG.colors.rightSlime;
     ctx.beginPath();
     ctx.arc(cx, cy, r, Math.PI, 0);
     ctx.closePath();
