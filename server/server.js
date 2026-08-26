@@ -14,6 +14,9 @@ import { CONFIG } from '../js/config.js';
 import { createInitialState, update } from '../js/physics.js';
 
 const port = process.env.PORT || CONFIG.serverPort;
+// MATCH_TARGET ortam değişkeni maç uzunluğunu config'i değiştirmeden ayarlar
+// (testte kısa maç, istenirse Render'da farklı hedef).
+if (process.env.MATCH_TARGET) CONFIG.matchTarget = Number(process.env.MATCH_TARGET);
 const rooms = new Map(); // kod -> oda
 
 const httpServer = http.createServer((req, res) => {
@@ -35,6 +38,7 @@ wss.on('connection', (ws) => {
     if (msg.type === 'create') createRoom(ws);
     else if (msg.type === 'join') joinRoom(ws, msg.code);
     else if (msg.type === 'input') receiveInput(ws, msg.input);
+    else if (msg.type === 'rematch') voteRematch(ws);
   });
   ws.on('close', () => leaveRoom(ws));
 });
@@ -91,6 +95,19 @@ function receiveInput(ws, input) {
   const room = ws.room;
   if (!room || !input) return;
   room.inputs[ws.side] = { left: !!input.left, right: !!input.right, jump: !!input.jump };
+}
+
+// Maç bittiğinde iki taraf da isterse aynı odada yeni maç başlar.
+function voteRematch(ws) {
+  const room = ws.room;
+  if (!room || !room.state || room.state.winner === null) return;
+  room.rematchVotes = room.rematchVotes || new Set();
+  room.rematchVotes.add(ws.side);
+  if (room.rematchVotes.size >= 2) {
+    room.rematchVotes = null;
+    room.inputs = [idleInput(), idleInput()];
+    room.state = createInitialState();
+  }
 }
 
 function leaveRoom(ws) {

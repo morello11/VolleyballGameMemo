@@ -10,11 +10,16 @@ export function createInitialState() {
     ball: servedBall(0),
     score: [0, 0],
     servePause: 0, // sıfırdan büyükken top servis noktasında asılı bekler
+    lastScorer: null, // son sayıyı alan taraf (skor vurgusu için)
+    winner: null, // maç bitince kazanan taraf; oyun donar
+    events: [], // bu tikte olanlar ('hit', 'bounce', 'score', 'win') — ses/efekt için
   };
 }
 
 // inputs: taraf sırasıyla iki {left, right, jump} nesnesi.
 export function update(state, inputs, dt) {
+  state.events = [];
+  if (state.winner !== null) return;
   for (let side = 0; side < state.slimes.length; side++) {
     updateSlime(state.slimes[side], inputs[side], dt);
   }
@@ -75,17 +80,18 @@ function updateBall(state, dt) {
     return;
   }
 
-  collideBallWalls(ball);
-  collideBallNet(ball);
-  for (const slime of state.slimes) collideBallSlime(ball, slime);
+  collideBallWalls(ball, state.events);
+  collideBallNet(ball, state.events);
+  for (const slime of state.slimes) collideBallSlime(ball, slime, state.events);
   clampBallSpeed(ball);
 }
 
 // Top yere değdi: karşı taraf sayıyı alır ve servisi kullanır.
 function scorePoint(state) {
-  const winner = state.ball.x < CONFIG.fieldWidth / 2 ? 1 : 0;
-  state.score[winner] += 1;
-  state.ball = servedBall(winner);
+  const scorer = state.ball.x < CONFIG.fieldWidth / 2 ? 1 : 0;
+  state.score[scorer] += 1;
+  state.lastScorer = scorer;
+  state.ball = servedBall(scorer);
   state.servePause = CONFIG.servePause;
   for (const slime of state.slimes) {
     slime.x = startX(slime.side);
@@ -93,21 +99,33 @@ function scorePoint(state) {
     slime.vx = 0;
     slime.vy = 0;
   }
+  if (state.score[scorer] >= CONFIG.matchTarget) {
+    state.winner = scorer;
+    state.events.push('win');
+  } else {
+    state.events.push('score');
+  }
 }
 
-function collideBallWalls(ball) {
+function collideBallWalls(ball, events) {
   const r = CONFIG.ballRadius;
   if (ball.x < r) {
     ball.x = r;
-    if (ball.vx < 0) ball.vx = -ball.vx * CONFIG.ballBounceWall;
+    if (ball.vx < 0) {
+      ball.vx = -ball.vx * CONFIG.ballBounceWall;
+      events.push('bounce');
+    }
   }
   if (ball.x > CONFIG.fieldWidth - r) {
     ball.x = CONFIG.fieldWidth - r;
-    if (ball.vx > 0) ball.vx = -ball.vx * CONFIG.ballBounceWall;
+    if (ball.vx > 0) {
+      ball.vx = -ball.vx * CONFIG.ballBounceWall;
+      events.push('bounce');
+    }
   }
 }
 
-function collideBallNet(ball) {
+function collideBallNet(ball, events) {
   // Daire-dikdörtgen çarpışması: filenin topa en yakın noktasından sektir.
   const netX = CONFIG.fieldWidth / 2;
   const nearX = clamp(ball.x, netX - CONFIG.netWidth / 2, netX + CONFIG.netWidth / 2);
@@ -125,10 +143,11 @@ function collideBallNet(ball) {
   if (vn < 0) {
     ball.vx -= (1 + CONFIG.ballBounceWall) * vn * nx;
     ball.vy -= (1 + CONFIG.ballBounceWall) * vn * ny;
+    events.push('bounce');
   }
 }
 
-function collideBallSlime(ball, slime) {
+function collideBallSlime(ball, slime, events) {
   const dx = ball.x - slime.x;
   const dy = ball.y - slime.y;
   const dist = Math.hypot(dx, dy);
@@ -148,6 +167,7 @@ function collideBallSlime(ball, slime) {
   if (vn < 0) {
     ball.vx = rvx - (1 + CONFIG.ballBounceSlime) * vn * nx + slime.vx;
     ball.vy = rvy - (1 + CONFIG.ballBounceSlime) * vn * ny + slime.vy;
+    events.push('hit');
   }
 }
 

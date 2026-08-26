@@ -35,7 +35,8 @@ kodunu yazma; PR açıklamasına tek cümlelik not düş, kararı birlikte verir
    şimdilik atlandı — online sonrası istenirse ucuza eklenir.
 3. Oda kodu ile online 2 kişi (Node + WebSocket, sunucu-yetkili fizik,
    mini lobi: "Oda kur" / "Koda katıl")
-4. Maç akışı (set/maç bitişi), ufak efektler
+4. Maç akışı, ufak efektler — YAPILDI (7 sayıya maç, rövanş, sesler,
+   squash & stretch, dekor)
 5. Sürpriz olaylar (yıldırım, rüzgar, top modları) — config üzerinden
 
 ## Teknik kurallar
@@ -49,6 +50,7 @@ kodunu yazma; PR açıklamasına tek cümlelik not düş, kararı birlikte verir
   - `js/main.js` — döngü ve bağlama
   - `js/net.js` — sunucu bağlantısı (online adımıyla eklendi)
   - `js/lobby.js` — lobi ekranı (online adımıyla eklendi)
+  - `js/sound.js` — sentezlenmiş mini ses efektleri (maç akışı adımıyla eklendi)
   - `server/server.js` — oda tabanlı oyun sunucusu (aynı physics.js'i koşar)
   - `render.yaml` — Render tek tık dağıtım tarifi
 - En önemli mimari kural: `physics.js` saf olacak —
