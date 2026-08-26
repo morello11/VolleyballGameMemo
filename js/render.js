@@ -92,14 +92,14 @@ export function createRenderer(canvas) {
   }
 
   function drawTouchHints(w, h) {
-    const size = h * 0.05;
-    const y = h * 0.5;
+    const size = h * CONFIG.hintSizeFrac;
+    const y = h * CONFIG.hintYFrac;
     ctx.save();
     ctx.globalAlpha = CONFIG.hintOpacity;
     ctx.fillStyle = CONFIG.colors.hint;
-    drawTriangle(w * 0.125, y, size, -1, 0); // sol bölge: sola git
-    drawTriangle(w * 0.375, y, size, 1, 0); // sol yarının sağı: sağa git
-    drawTriangle(w * 0.75, y, size, 0, -1); // sağ yarı: zıpla
+    drawTriangle(w * CONFIG.hintLeftXFrac, y, size, -1, 0); // sol bölge: sola git
+    drawTriangle(w * CONFIG.hintRightXFrac, y, size, 1, 0); // sol yarının sağı: sağa git
+    drawTriangle(w * CONFIG.hintJumpXFrac, y, size, 0, -1); // sağ yarı: zıpla
     ctx.restore();
   }
 

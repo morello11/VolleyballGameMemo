@@ -45,6 +45,11 @@ export const CONFIG = {
   // Görsel oranlar ve ölçüler
   groundScreenFrac: 0.12, // zeminin ekran yüksekliğindeki payı
   hintOpacity: 0.1, // dokunma bölgesi ikonlarının opaklığı
+  hintSizeFrac: 0.05, // ikon boyutu (ekran yüksekliğine göre)
+  hintYFrac: 0.82, // ikonların dikey konumu — başparmakların doğal durduğu alt hiza
+  hintLeftXFrac: 0.1, // "sola git" ikonu (ekran genişliğine göre)
+  hintRightXFrac: 0.33, // "sağa git" ikonu
+  hintJumpXFrac: 0.9, // "zıpla" ikonu
   eyeOffsetFrac: 0.45, // gözün merkezden uzaklığı (slimeRadius'a göre)
   eyeRadiusFrac: 0.18, // göz yarıçapı (slimeRadius'a göre)
   pupilShiftFrac: 0.35, // göz bebeğinin topa doğru kayması (göz yarıçapına göre)
