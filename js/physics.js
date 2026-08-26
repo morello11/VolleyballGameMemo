@@ -1,23 +1,40 @@
 // Saf oyun mantığı. DOM/canvas'a asla dokunmaz; ileride aynen sunucuda çalışacak.
 // Koordinatlar: x sağa, y yukarı artar; zemin y=0. Slime konumu taban merkezi,
-// top konumu dairenin merkezi.
+// top konumu dairenin merkezi. Taraflar: 0 = sol, 1 = sağ.
 
 import { CONFIG } from './config.js';
 
 export function createInitialState() {
   return {
-    slime: { x: CONFIG.slimeStartX, y: 0, vx: 0, vy: 0 },
-    ball: spawnedBall(),
+    slimes: [newSlime(0), newSlime(1)],
+    ball: servedBall(0),
+    score: [0, 0],
+    servePause: 0, // sıfırdan büyükken top servis noktasında asılı bekler
   };
 }
 
+// inputs: taraf sırasıyla iki {left, right, jump} nesnesi.
 export function update(state, inputs, dt) {
-  updateSlime(state.slime, inputs, dt);
-  updateBall(state.ball, state.slime, dt);
+  for (let side = 0; side < state.slimes.length; side++) {
+    updateSlime(state.slimes[side], inputs[side], dt);
+  }
+  if (state.servePause > 0) {
+    state.servePause -= dt;
+    return;
+  }
+  updateBall(state, dt);
 }
 
-function spawnedBall() {
-  return { x: CONFIG.slimeStartX, y: CONFIG.ballSpawnHeight, vx: 0, vy: 0, rot: 0 };
+function newSlime(side) {
+  return { side, x: startX(side), y: 0, vx: 0, vy: 0 };
+}
+
+function servedBall(side) {
+  return { x: startX(side), y: CONFIG.ballSpawnHeight, vx: 0, vy: 0, rot: 0 };
+}
+
+function startX(side) {
+  return side === 0 ? CONFIG.slimeStartX : CONFIG.fieldWidth - CONFIG.slimeStartX;
 }
 
 function updateSlime(slime, inputs, dt) {
@@ -36,31 +53,46 @@ function updateSlime(slime, inputs, dt) {
     slime.vy = 0;
   }
 
-  // Slime sol yarıda kalır: sol duvar ile filenin sol yüzü arasında.
+  // Her slime kendi yarısında kalır: duvar ile filenin kendi yüzü arasında.
   const netLeft = CONFIG.fieldWidth / 2 - CONFIG.netWidth / 2;
-  slime.x = clamp(slime.x, CONFIG.slimeRadius, netLeft - CONFIG.slimeRadius);
+  const netRight = CONFIG.fieldWidth / 2 + CONFIG.netWidth / 2;
+  if (slime.side === 0) {
+    slime.x = clamp(slime.x, CONFIG.slimeRadius, netLeft - CONFIG.slimeRadius);
+  } else {
+    slime.x = clamp(slime.x, netRight + CONFIG.slimeRadius, CONFIG.fieldWidth - CONFIG.slimeRadius);
+  }
 }
 
-function updateBall(ball, slime, dt) {
+function updateBall(state, dt) {
+  const ball = state.ball;
   ball.vy -= CONFIG.gravity * dt;
   ball.x += ball.vx * dt;
   ball.y += ball.vy * dt;
   ball.rot += (ball.vx / CONFIG.ballRadius) * dt;
 
-  collideBallGround(ball);
+  if (ball.y < CONFIG.ballRadius) {
+    scorePoint(state);
+    return;
+  }
+
   collideBallWalls(ball);
   collideBallNet(ball);
-  collideBallSlime(ball, slime);
+  for (const slime of state.slimes) collideBallSlime(ball, slime);
   clampBallSpeed(ball);
-
-  if (isBallAtRest(ball)) Object.assign(ball, spawnedBall());
 }
 
-function collideBallGround(ball) {
-  if (ball.y >= CONFIG.ballRadius) return;
-  ball.y = CONFIG.ballRadius;
-  if (ball.vy < 0) ball.vy = -ball.vy * CONFIG.ballBounceWall;
-  ball.vx *= CONFIG.ballGroundFriction;
+// Top yere değdi: karşı taraf sayıyı alır ve servisi kullanır.
+function scorePoint(state) {
+  const winner = state.ball.x < CONFIG.fieldWidth / 2 ? 1 : 0;
+  state.score[winner] += 1;
+  state.ball = servedBall(winner);
+  state.servePause = CONFIG.servePause;
+  for (const slime of state.slimes) {
+    slime.x = startX(slime.side);
+    slime.y = 0;
+    slime.vx = 0;
+    slime.vy = 0;
+  }
 }
 
 function collideBallWalls(ball) {
@@ -126,11 +158,6 @@ function clampBallSpeed(ball) {
     ball.vx *= k;
     ball.vy *= k;
   }
-}
-
-function isBallAtRest(ball) {
-  const onGround = ball.y <= CONFIG.ballRadius + 1;
-  return onGround && Math.hypot(ball.vx, ball.vy) < CONFIG.ballRestSpeed;
 }
 
 function clamp(value, min, max) {

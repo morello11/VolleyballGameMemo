@@ -1,13 +1,16 @@
-// Dokunma ve klavye okuma. Oyun mantığı yok; sadece {left, right, jump} üretir.
+// Dokunma ve klavye okuma. Oyun mantığı yok; taraf sırasıyla iki
+// {left, right, jump} üretir. Dokunma ve ok tuşları + boşluk sol oyuncuyu
+// sürer. Sağ oyuncu W/A/D ile sürülür — bu sadece masaüstünde test içindir;
+// online adımında yerini ağdaki rakibin girdisi alacak.
 // Dokunma: sol yarıda ilk basılan nokta merkez olur, başparmağı merkezin
 // sağına/soluna kaydırmak hareket ettirir (sanal joystick). Sağ yarı = zıpla.
 // Bölge, dokunuşun başladığı yere göre belirlenir ve dokunuş boyunca değişmez.
-// Klavye: ok tuşları + boşluk.
 
 import { CONFIG } from './config.js';
 
 export function createInput() {
   const keys = { left: false, right: false, jump: false };
+  const keysRight = { left: false, right: false, jump: false };
   const touchZones = new Map(); // dokunuş id -> o dokunuşun bölgesi/durumu
 
   window.addEventListener('keydown', (e) => setKey(e, true));
@@ -20,6 +23,9 @@ export function createInput() {
     if (e.code === 'ArrowLeft') keys.left = down;
     else if (e.code === 'ArrowRight') keys.right = down;
     else if (e.code === 'Space' || e.code === 'ArrowUp') keys.jump = down;
+    else if (e.code === 'KeyA') keysRight.left = down;
+    else if (e.code === 'KeyD') keysRight.right = down;
+    else if (e.code === 'KeyW') keysRight.jump = down;
     else return;
     e.preventDefault();
   }
@@ -69,13 +75,14 @@ export function createInput() {
 
   return {
     read() {
-      const inputs = { left: keys.left, right: keys.right, jump: keys.jump };
+      const leftPlayer = { left: keys.left, right: keys.right, jump: keys.jump };
       for (const zone of touchZones.values()) {
-        inputs.left = inputs.left || zone.left;
-        inputs.right = inputs.right || zone.right;
-        inputs.jump = inputs.jump || zone.jump;
+        leftPlayer.left = leftPlayer.left || zone.left;
+        leftPlayer.right = leftPlayer.right || zone.right;
+        leftPlayer.jump = leftPlayer.jump || zone.jump;
       }
-      return inputs;
+      const rightPlayer = { left: keysRight.left, right: keysRight.right, jump: keysRight.jump };
+      return [leftPlayer, rightPlayer];
     },
   };
 }

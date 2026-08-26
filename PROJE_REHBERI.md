@@ -29,9 +29,13 @@ Teslimat: Adım 1'i tek PR olarak ver. Kapsam dışı bir ihtiyaç fark edersen
 kodunu yazma; PR açıklamasına tek cümlelik not düş, kararı birlikte veririz.
 
 ## Yol haritası (bilgi amaçlı — sırası gelince istenecek)
-2. Aynı telefonda 2 kişi (bölünmüş kontroller) veya çok basit bot
-3. Oda kodu ile online 2 kişi (Node + WebSocket, sunucu-yetkili fizik)
-4. Skor, maç akışı, ufak efektler
+2. Online'a yerel temel: ikinci slime + sayı/servis akışı (sağ oyuncu
+   masaüstünde W/A/D ile yalnızca test amaçlı sürülür).
+   Karar: aynı telefonda 2 kişi İPTAL (oynanışı zayıf); basit bot da
+   şimdilik atlandı — online sonrası istenirse ucuza eklenir.
+3. Oda kodu ile online 2 kişi (Node + WebSocket, sunucu-yetkili fizik,
+   mini lobi: "Oda kur" / "Koda katıl")
+4. Maç akışı (set/maç bitişi), ufak efektler
 5. Sürpriz olaylar (yıldırım, rüzgar, top modları) — config üzerinden
 
 ## Teknik kurallar
