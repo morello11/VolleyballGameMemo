@@ -14,12 +14,83 @@
       overscroll-behavior: none;
       -webkit-user-select: none;
       user-select: none;
+      font-family: system-ui, sans-serif;
     }
     #game {
       display: block;
       width: 100vw;
       height: 100vh;
       height: 100dvh; /* mobilde adres çubuğu görünürken taşmayı önler */
+    }
+    #lobby {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      z-index: 5;
+      text-align: center;
+    }
+    #lobby h1 {
+      margin: 0;
+      font-size: 34px;
+      color: #333;
+    }
+    #lobbyButtons {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+    #lobby button {
+      font: bold 20px system-ui, sans-serif;
+      color: #fff;
+      border: 0;
+      border-radius: 10px;
+      padding: 14px 28px;
+      min-width: 240px;
+      cursor: pointer;
+    }
+    #createBtn { background: #e2574c; }
+    #joinBtn { background: #3e8fb0; min-width: 0; }
+    #joinRow {
+      display: flex;
+      gap: 8px;
+    }
+    #codeInput {
+      font: bold 20px system-ui, sans-serif;
+      width: 120px;
+      text-align: center;
+      text-transform: uppercase;
+      border: 2px solid #6b4f2a;
+      border-radius: 10px;
+      background: #f6f0e4;
+      padding: 12px 0;
+    }
+    #soloBtn {
+      background: none !important;
+      color: #6b4f2a !important;
+      font-size: 15px !important;
+      text-decoration: underline;
+      min-width: 0 !important;
+      padding: 4px !important;
+    }
+    #lobbyWaiting { display: none; color: #333; }
+    #lobbyWaiting p { margin: 6px 0; font-size: 18px; }
+    #waitingCode {
+      font-size: 56px;
+      font-weight: bold;
+      letter-spacing: 10px;
+      color: #e2574c;
+      margin: 6px 0;
+    }
+    #lobbyMsg {
+      min-height: 22px;
+      margin: 0;
+      color: #a33;
+      font-size: 15px;
     }
     #rotate {
       display: none;
@@ -38,6 +109,23 @@
 </head>
 <body>
   <canvas id="game"></canvas>
+  <div id="lobby">
+    <h1>Slime Volley</h1>
+    <div id="lobbyButtons">
+      <button id="createBtn">Oda kur</button>
+      <div id="joinRow">
+        <input id="codeInput" placeholder="KOD" autocapitalize="characters" autocomplete="off" spellcheck="false">
+        <button id="joinBtn">Koda katıl</button>
+      </div>
+      <button id="soloBtn">Tek başına ısınma</button>
+    </div>
+    <div id="lobbyWaiting">
+      <p>Oda kodun:</p>
+      <div id="waitingCode"></div>
+      <p>Arkadaşın "Koda katıl" ile bu kodu girince oyun başlar.</p>
+    </div>
+    <p id="lobbyMsg"></p>
+  </div>
   <div id="rotate">Telefonu yatay çevir 🔄</div>
   <script type="module" src="js/main.js"></script>
 </body>

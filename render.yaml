@@ -1,0 +1,8 @@
+# Render.com tek tık dağıtım tarifi: New + -> Blueprint -> bu repoyu seç.
+services:
+  - type: web
+    name: slime-volley-server
+    runtime: node
+    plan: free
+    buildCommand: cd server && npm install
+    startCommand: node server/server.js

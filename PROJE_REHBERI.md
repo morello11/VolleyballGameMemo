@@ -47,6 +47,10 @@ kodunu yazma; PR açıklamasına tek cümlelik not düş, kararı birlikte verir
   - `js/input.js` — dokunma/klavye okuma
   - `js/render.js` — canvas çizimi
   - `js/main.js` — döngü ve bağlama
+  - `js/net.js` — sunucu bağlantısı (online adımıyla eklendi)
+  - `js/lobby.js` — lobi ekranı (online adımıyla eklendi)
+  - `server/server.js` — oda tabanlı oyun sunucusu (aynı physics.js'i koşar)
+  - `render.yaml` — Render tek tık dağıtım tarifi
 - En önemli mimari kural: `physics.js` saf olacak —
   `update(state, inputs, dt)` şeklinde, DOM/canvas'a asla dokunmayan
   fonksiyonlar. Render ve input ayrı. (İleride aynı fizik kodu sunucuda

@@ -3,8 +3,10 @@
 Slime Volley — telefon tarayıcısında oynanan iki kişilik slime voleybolu.
 Proje planı ve kurallar için: [PROJE_REHBERI.md](PROJE_REHBERI.md)
 
-Tamamen statik (vanilla JS + Canvas 2D, build yok); repo kökü doğrudan
-GitHub Pages ile servis edilebilir.
+Oyun sayfası tamamen statik (vanilla JS + Canvas 2D, build yok); repo kökü
+doğrudan GitHub Pages ile servis edilir. Online oyun için `server/` altında
+küçük bir Node + WebSocket sunucusu vardır (aynı saf `js/physics.js`'i
+çalıştırır); `render.yaml` ile Render'a tek tık dağıtılır.
 
 ## Nasıl test ederim
 
@@ -21,3 +23,22 @@ GitHub Pages ile servis edilebilir.
    yönlenmeli, top yere düşünce karşı taraf sayı almalı, kısa bir
    duraksamadan sonra servis sayıyı alanda olmalı, skor üstte iki yanda
    görünmeli.
+
+## Online nasıl test ederim
+
+- İki telefon: biri **"Oda kur"** deyip 4 harfli kodu söyler, diğeri
+  **"Koda katıl"** ile kodu girer; oyun ikisinde birden başlar.
+- Yerelde (sunucu geliştirme): `cd server && npm install && npm start`
+  (port 8787), ayrı bir uçta `python3 -m http.server 8000`; iki tarayıcı
+  penceresinde `http://localhost:8000` açıp birinden oda kur, diğerinden
+  katıl. `js/config.js` içindeki `serverUrl` boşken istemci sayfanın
+  sunulduğu makinede yerel sunucu arar.
+
+## Sunucuyu Render'a kurma (tek sefer)
+
+1. https://render.com — GitHub hesabınla üye ol.
+2. **New +** → **Blueprint** → bu repoyu seç → **Deploy** (ayarlar
+   `render.yaml` içinde hazır; ücretsiz plan).
+3. Çıkan servis adresini (`https://....onrender.com`) al; `js/config.js`
+   içindeki `serverUrl` değerine `wss://....onrender.com` olarak yaz.
+4. Not: ücretsiz plan 15 dk hareketsizlikte uyur; ilk bağlanan ~1 dk bekler.
