@@ -44,6 +44,9 @@ export function connectNet(onMessage, onClose) {
     sendInput(input) {
       send({ type: 'input', input });
     },
+    sendRematch() {
+      send({ type: 'rematch' });
+    },
     close() {
       closed = true;
       ws.close();

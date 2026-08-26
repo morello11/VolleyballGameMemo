@@ -9,6 +9,7 @@ import { createInput } from './input.js';
 import { createRenderer } from './render.js';
 import { createLobby } from './lobby.js';
 import { connectNet } from './net.js';
+import { createSound } from './sound.js';
 
 const STEP = 1 / CONFIG.physicsHz;
 const MAX_FRAME_TIME = 0.25; // sekme arka plana düşüp dönünce fizik patlamasın
@@ -19,11 +20,32 @@ document.getElementById('rotate').style.background = CONFIG.colors.sky;
 const canvas = document.getElementById('game');
 const input = createInput(canvas);
 const renderer = createRenderer(canvas);
+const sound = createSound();
 
 let mode = 'local';
 let state = createInitialState();
 let net = null;
 let onlineState = null; // sunucudan gelen son durum
+let rematchSent = false; // maç sonunda "yeniden oyna" isteğimiz gitti mi
+
+function playEvents(events) {
+  if (!events || lobby.isVisible()) return; // lobi arkasındaki ısınma sahnesi sessiz
+  for (const event of events) sound.playEvent(event);
+}
+
+// Maç sonu ekranında herhangi bir dokunuş/tuş: yerelde yeni maç, online'da rövanş isteği.
+function onAnyPress() {
+  sound.unlock();
+  if (mode === 'local' && state.winner !== null) {
+    state = createInitialState();
+  } else if (mode === 'online' && net && onlineState && onlineState.winner !== null && !rematchSent) {
+    net.sendRematch();
+    rematchSent = true;
+  }
+}
+window.addEventListener('touchstart', onAnyPress, { passive: true });
+window.addEventListener('mousedown', onAnyPress);
+window.addEventListener('keydown', onAnyPress);
 
 const lobby = createLobby({
   onSolo() {
@@ -55,7 +77,11 @@ function onNetMessage(msg) {
     onlineState = null;
     lobby.hide();
   } else if (msg.type === 'state') {
+    if (onlineState && onlineState.winner !== null && msg.state.winner === null) {
+      rematchSent = false; // rövanş başladı
+    }
     onlineState = msg.state;
+    playEvents(msg.state.events);
   } else if (msg.type === 'peer_left') {
     leaveOnline();
     lobby.showMenu('Rakip ayrıldı.');
@@ -78,6 +104,7 @@ function leaveOnline() {
   }
   mode = 'local';
   onlineState = null;
+  rematchSent = false;
   state = createInitialState();
 }
 
@@ -109,10 +136,11 @@ function frame(now) {
       net.sendInput(inputs[0]); // dokunma + ok tuşları kendi slime'ını sürer
     } else {
       update(state, inputs, STEP);
+      playEvents(state.events);
     }
     accumulator -= STEP;
   }
-  renderer.draw(mode === 'online' && onlineState ? onlineState : state);
+  renderer.draw(mode === 'online' && onlineState ? onlineState : state, { rematchWaiting: rematchSent });
   requestAnimationFrame(frame);
 }
 

@@ -19,8 +19,9 @@ export const CONFIG = {
   ballBounceWall: 0.85, // duvar ve file için ortak sekme katsayısı
   maxBallSpeed: 1100,
 
-  // Sayı ve servis
+  // Sayı, servis ve maç
   servePause: 0.9, // sayı sonrası topun servis noktasında asılı beklediği saniye
+  matchTarget: 7, // bu sayıya ulaşan maçı kazanır
 
   // Başlangıç konumları
   slimeStartX: 200, // sol yarının ortası (sağ slime aynaya göre yerleşir)
@@ -52,7 +53,22 @@ export const CONFIG = {
     eye: '#ffffff',
     pupil: '#222222',
     hint: '#000000',
+    sun: '#f4d06f',
+    cloud: '#eef6fb',
+    overlayText: '#333333',
   },
+
+  // Dekor (ekran oranlarıyla: x/y genişlik-yükseklik payı, r/s boyut payı)
+  decor: {
+    sun: { x: 0.62, y: 0.16, r: 0.07 },
+    clouds: [
+      { x: 0.18, y: 0.24, s: 0.045 },
+      { x: 0.87, y: 0.34, s: 0.035 },
+    ],
+  },
+
+  // Ses (WebAudio ile sentezlenir, dosya yok)
+  soundVolume: 0.15,
 
   // Görsel oranlar ve ölçüler
   groundScreenFrac: 0.12, // zeminin ekran yüksekliğindeki payı
@@ -65,6 +81,15 @@ export const CONFIG = {
   scoreSizeFrac: 0.07, // skor yazısının boyutu (ekran yüksekliğine göre)
   scoreYFrac: 0.12, // skorun dikey konumu
   scoreXFrac: 0.08, // skorun kendi tarafının kenarından uzaklığı
+  slimeStretchFrac: 0.2, // havadayken dikey uzama payı (hıza göre)
+  blinkPeriodMs: 3800, // göz kırpma aralığı
+  blinkDurationMs: 130, // göz kapalı kalma süresi
+  overlay: {
+    titleSizeFrac: 0.14, // "X KAZANDI!" yazısı (ekran yüksekliğine göre)
+    titleYFrac: 0.4,
+    subSizeFrac: 0.05, // alt satır ("yeniden oynamak için dokun")
+    subYFrac: 0.56,
+  },
   eyeOffsetFrac: 0.45, // gözün merkezden uzaklığı (slimeRadius'a göre)
   eyeRadiusFrac: 0.18, // göz yarıçapı (slimeRadius'a göre)
   pupilShiftFrac: 0.35, // göz bebeğinin topa doğru kayması (göz yarıçapına göre)

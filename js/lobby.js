@@ -48,5 +48,11 @@ export function createLobby(handlers) {
     message.textContent = text;
   }
 
-  return { showMenu, showWaiting, hide, showMessage };
+  return {
+    showMenu,
+    showWaiting,
+    hide,
+    showMessage,
+    isVisible: () => el.style.display !== 'none',
+  };
 }

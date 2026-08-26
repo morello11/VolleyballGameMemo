@@ -28,6 +28,9 @@ küçük bir Node + WebSocket sunucusu vardır (aynı saf `js/physics.js`'i
 
 - İki telefon: biri **"Oda kur"** deyip 4 harfli kodu söyler, diğeri
   **"Koda katıl"** ile kodu girer; oyun ikisinde birden başlar.
+- Maç 7 sayıya oynanır (`matchTarget`); biten maçta iki taraf da ekrana
+  dokununca aynı odada rövanş başlar. Sunucuda `MATCH_TARGET` ortam
+  değişkeni maç uzunluğunu config'i değiştirmeden ayarlar.
 - Yerelde (sunucu geliştirme): `cd server && npm install && npm start`
   (port 8787), ayrı bir uçta `python3 -m http.server 8000`; iki tarayıcı
   penceresinde `http://localhost:8000` açıp birinden oda kur, diğerinden
