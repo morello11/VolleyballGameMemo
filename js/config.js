@@ -34,8 +34,8 @@ export const CONFIG = {
   physicsHz: 60,
 
   // Ağ
-  serverUrl: '', // Render dağıtımından sonra wss://... adresi buraya yazılacak;
-  // boşken istemci, sayfanın sunulduğu makinede yerel sunucu arar (test için)
+  serverUrl: 'wss://slime-volley-server.onrender.com', // Render'daki oyun sunucusu;
+  // boş bırakılırsa istemci, sayfanın sunulduğu makinede yerel sunucu arar (test için)
   serverPort: 8787, // yerel sunucunun portu (Render'da PORT ortam değişkeni kullanılır)
   roomCodeLength: 4,
   roomCodeAlphabet: 'ACDEFGHJKLMNPRSTUVYZ2345679', // karıştırılması kolay karakterler yok
