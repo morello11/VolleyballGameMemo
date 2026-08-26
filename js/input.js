@@ -8,18 +8,20 @@
 
 import { CONFIG } from './config.js';
 
-export function createInput() {
+export function createInput(canvas) {
   const keys = { left: false, right: false, jump: false };
   const keysRight = { left: false, right: false, jump: false };
   const touchZones = new Map(); // dokunuş id -> o dokunuşun bölgesi/durumu
 
   window.addEventListener('keydown', (e) => setKey(e, true));
   window.addEventListener('keyup', (e) => setKey(e, false));
+  // Dokunma dinleyicileri canvas'ta: lobi açıkken düğmeler normal tıklanabilir.
   for (const type of ['touchstart', 'touchmove', 'touchend', 'touchcancel']) {
-    window.addEventListener(type, onTouch, { passive: false });
+    canvas.addEventListener(type, onTouch, { passive: false });
   }
 
   function setKey(e, down) {
+    if (e.target.tagName === 'INPUT') return; // lobideki kod kutusuna yazmayı engelleme
     if (e.code === 'ArrowLeft') keys.left = down;
     else if (e.code === 'ArrowRight') keys.right = down;
     else if (e.code === 'Space' || e.code === 'ArrowUp') keys.jump = down;
