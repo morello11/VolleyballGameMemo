@@ -4,7 +4,8 @@
 
 import { CONFIG } from './config.js';
 
-export function createInitialState() {
+// chaos: lobide seçilen kaos olayları, ör. {wind, ballModes, invert}.
+export function createInitialState(chaos = {}) {
   return {
     slimes: [newSlime(0), newSlime(1)],
     ball: servedBall(0),
@@ -12,7 +13,11 @@ export function createInitialState() {
     servePause: 0, // sıfırdan büyükken top servis noktasında asılı bekler
     lastScorer: null, // son sayıyı alan taraf (skor vurgusu için)
     winner: null, // maç bitince kazanan taraf; oyun donar
-    events: [], // bu tikte olanlar ('hit', 'bounce', 'score', 'win') — ses/efekt için
+    events: [], // bu tikte olanlar ('hit', 'smash', 'bounce', 'score', 'win', 'chaos')
+    rally: 0, // bu sayıdaki üst üste vuruş sayısı
+    chaos: { wind: !!chaos.wind, ballModes: !!chaos.ballModes, invert: !!chaos.invert },
+    chaosTimer: nextChaosDelay(), // bir sonraki kaos olayına kalan saniye
+    activeChaos: null, // {type, timeLeft, windVx?, ballScale?}
   };
 }
 
@@ -20,14 +25,64 @@ export function createInitialState() {
 export function update(state, inputs, dt) {
   state.events = [];
   if (state.winner !== null) return;
+
+  const inverted = state.activeChaos && state.activeChaos.type === 'invert';
   for (let side = 0; side < state.slimes.length; side++) {
-    updateSlime(state.slimes[side], inputs[side], dt);
+    const raw = inputs[side];
+    const applied = inverted ? { left: raw.right, right: raw.left, jump: raw.jump } : raw;
+    updateSlime(state.slimes[side], applied, dt);
   }
   if (state.servePause > 0) {
     state.servePause -= dt;
     return;
   }
+  updateChaos(state, dt);
   updateBall(state, dt);
+}
+
+// Etkin top yarıçapı: kaos top boyutunu değiştirebilir.
+export function ballRadius(state) {
+  const scale = state.activeChaos && state.activeChaos.ballScale ? state.activeChaos.ballScale : 1;
+  return CONFIG.ballRadius * scale;
+}
+
+function updateChaos(state, dt) {
+  if (state.activeChaos) {
+    state.activeChaos.timeLeft -= dt;
+    if (state.activeChaos.timeLeft <= 0) state.activeChaos = null;
+    return;
+  }
+  const enabled = chaosPool(state.chaos);
+  if (enabled.length === 0) return;
+  state.chaosTimer -= dt;
+  if (state.chaosTimer > 0) return;
+  state.chaosTimer = nextChaosDelay();
+  state.activeChaos = startChaos(enabled[Math.floor(Math.random() * enabled.length)]);
+  state.events.push('chaos');
+}
+
+function chaosPool(chaos) {
+  const pool = [];
+  if (chaos.wind) pool.push('wind');
+  if (chaos.ballModes) pool.push('ballBig', 'ballSmall');
+  if (chaos.invert) pool.push('invert');
+  return pool;
+}
+
+function startChaos(type) {
+  const c = CONFIG.chaos;
+  if (type === 'wind') {
+    const direction = Math.random() < 0.5 ? -1 : 1;
+    return { type, timeLeft: c.windDuration, windVx: direction * c.windStrength };
+  }
+  if (type === 'ballBig') return { type, timeLeft: c.ballModeDuration, ballScale: c.ballScaleBig };
+  if (type === 'ballSmall') return { type, timeLeft: c.ballModeDuration, ballScale: c.ballScaleSmall };
+  return { type: 'invert', timeLeft: c.invertDuration };
+}
+
+function nextChaosDelay() {
+  const c = CONFIG.chaos;
+  return c.minDelay + Math.random() * (c.maxDelay - c.minDelay);
 }
 
 function newSlime(side) {
@@ -70,19 +125,27 @@ function updateSlime(slime, inputs, dt) {
 
 function updateBall(state, dt) {
   const ball = state.ball;
+  const r = ballRadius(state);
+  if (state.activeChaos && state.activeChaos.windVx) ball.vx += state.activeChaos.windVx * dt;
   ball.vy -= CONFIG.gravity * dt;
   ball.x += ball.vx * dt;
   ball.y += ball.vy * dt;
-  ball.rot += (ball.vx / CONFIG.ballRadius) * dt;
+  ball.rot += (ball.vx / r) * dt;
 
-  if (ball.y < CONFIG.ballRadius) {
+  if (ball.y < r) {
     scorePoint(state);
     return;
   }
 
-  collideBallWalls(ball, state.events);
-  collideBallNet(ball, state.events);
-  for (const slime of state.slimes) collideBallSlime(ball, slime, state.events);
+  collideBallWalls(ball, r, state.events);
+  collideBallNet(ball, r, state.events);
+  for (const slime of state.slimes) {
+    const hitType = collideBallSlime(ball, r, slime);
+    if (hitType) {
+      state.rally += 1;
+      state.events.push(hitType);
+    }
+  }
   clampBallSpeed(ball);
 }
 
@@ -99,6 +162,8 @@ function scorePoint(state) {
     slime.vx = 0;
     slime.vy = 0;
   }
+  state.rally = 0;
+  state.activeChaos = null; // sayı arası temiz sahne; sayaç yeni olaya doğru işler
   if (state.score[scorer] >= CONFIG.matchTarget) {
     state.winner = scorer;
     state.events.push('win');
@@ -107,8 +172,7 @@ function scorePoint(state) {
   }
 }
 
-function collideBallWalls(ball, events) {
-  const r = CONFIG.ballRadius;
+function collideBallWalls(ball, r, events) {
   if (ball.x < r) {
     ball.x = r;
     if (ball.vx < 0) {
@@ -125,7 +189,7 @@ function collideBallWalls(ball, events) {
   }
 }
 
-function collideBallNet(ball, events) {
+function collideBallNet(ball, r, events) {
   // Daire-dikdörtgen çarpışması: filenin topa en yakın noktasından sektir.
   const netX = CONFIG.fieldWidth / 2;
   const nearX = clamp(ball.x, netX - CONFIG.netWidth / 2, netX + CONFIG.netWidth / 2);
@@ -133,12 +197,12 @@ function collideBallNet(ball, events) {
   const dx = ball.x - nearX;
   const dy = ball.y - nearY;
   const dist = Math.hypot(dx, dy);
-  if (dist === 0 || dist >= CONFIG.ballRadius) return;
+  if (dist === 0 || dist >= r) return;
 
   const nx = dx / dist;
   const ny = dy / dist;
-  ball.x = nearX + nx * CONFIG.ballRadius;
-  ball.y = nearY + ny * CONFIG.ballRadius;
+  ball.x = nearX + nx * r;
+  ball.y = nearY + ny * r;
   const vn = ball.vx * nx + ball.vy * ny;
   if (vn < 0) {
     ball.vx -= (1 + CONFIG.ballBounceWall) * vn * nx;
@@ -147,13 +211,14 @@ function collideBallNet(ball, events) {
   }
 }
 
-function collideBallSlime(ball, slime, events) {
+// Çarpışma olduysa vuruş türünü ('hit' | 'smash'), olmadıysa null döner.
+function collideBallSlime(ball, r, slime) {
   const dx = ball.x - slime.x;
   const dy = ball.y - slime.y;
   const dist = Math.hypot(dx, dy);
-  const minDist = CONFIG.slimeRadius + CONFIG.ballRadius;
+  const minDist = CONFIG.slimeRadius + r;
   // dy < 0: slime yarım daire, alt yarısı yok.
-  if (dist === 0 || dist >= minDist || dy < 0) return;
+  if (dist === 0 || dist >= minDist || dy < 0) return null;
 
   const nx = dx / dist;
   const ny = dy / dist;
@@ -164,11 +229,11 @@ function collideBallSlime(ball, slime, events) {
   const rvx = ball.vx - slime.vx;
   const rvy = ball.vy - slime.vy;
   const vn = rvx * nx + rvy * ny;
-  if (vn < 0) {
-    ball.vx = rvx - (1 + CONFIG.ballBounceSlime) * vn * nx + slime.vx;
-    ball.vy = rvy - (1 + CONFIG.ballBounceSlime) * vn * ny + slime.vy;
-    events.push('hit');
-  }
+  if (vn >= 0) return null;
+  ball.vx = rvx - (1 + CONFIG.ballBounceSlime) * vn * nx + slime.vx;
+  ball.vy = rvy - (1 + CONFIG.ballBounceSlime) * vn * ny + slime.vy;
+  const speed = Math.hypot(ball.vx, ball.vy);
+  return speed > CONFIG.smashSpeedFrac * CONFIG.maxBallSpeed ? 'smash' : 'hit';
 }
 
 function clampBallSpeed(ball) {

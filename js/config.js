@@ -70,6 +70,22 @@ export const CONFIG = {
   // Ses (WebAudio ile sentezlenir, dosya yok)
   soundVolume: 0.15,
 
+  // Kaos olayları (lobide tik'le seçilir; odayı kuran belirler)
+  chaos: {
+    minDelay: 8, // iki olay arası en az saniye
+    maxDelay: 16, // iki olay arası en çok saniye
+    windStrength: 260, // rüzgarın topa yatay ivmesi
+    windDuration: 5,
+    ballScaleBig: 1.8, // dev top çarpanı
+    ballScaleSmall: 0.55, // minik top çarpanı
+    ballModeDuration: 8,
+    invertDuration: 4, // ters kontrol süresi (iki oyuncu için birden)
+  },
+
+  // Sabit tatlar
+  smashSpeedFrac: 0.85, // vuruş sonrası hız bunun üstündeyse smaç sayılır (sarsıntı + ses)
+  rallyShowFrom: 6, // ralli sayacı bu vuruştan itibaren görünür
+
   // Görsel oranlar ve ölçüler
   groundScreenFrac: 0.12, // zeminin ekran yüksekliğindeki payı
   hintOpacity: 0.1, // dokunma bölgesi ikonlarının opaklığı
@@ -89,7 +105,13 @@ export const CONFIG = {
     titleYFrac: 0.4,
     subSizeFrac: 0.05, // alt satır ("yeniden oynamak için dokun")
     subYFrac: 0.56,
+    bannerSizeFrac: 0.08, // kaos pankartı ("RÜZGAR!" vb.)
+    bannerYFrac: 0.28,
+    rallySizeFrac: 0.045, // ralli sayacı yazısı
+    rallyYFrac: 0.07,
   },
+  shakeDuration: 0.25, // smaç sarsıntısının süresi (saniye)
+  shakeAmount: 7, // sarsıntının piksel genliği
   eyeOffsetFrac: 0.45, // gözün merkezden uzaklığı (slimeRadius'a göre)
   eyeRadiusFrac: 0.18, // göz yarıçapı (slimeRadius'a göre)
   pupilShiftFrac: 0.35, // göz bebeğinin topa doğru kayması (göz yarıçapına göre)

@@ -3,9 +3,18 @@
 // ekranın altından groundScreenFrac kadar yukarıdadır.
 
 import { CONFIG } from './config.js';
+import { ballRadius } from './physics.js';
+
+const CHAOS_LABELS = {
+  wind: 'RÜZGAR! 🌬️',
+  ballBig: 'DEV TOP!',
+  ballSmall: 'MİNİK TOP!',
+  invert: 'TERS KONTROL! 🙃',
+};
 
 export function createRenderer(canvas) {
   const ctx = canvas.getContext('2d');
+  let shakeLeft = 0; // smaç sarsıntısından kalan süre (yalnızca görsel)
 
   function resize() {
     const dpr = window.devicePixelRatio || 1;
@@ -24,18 +33,47 @@ export function createRenderer(canvas) {
     const toX = (x) => x * scale;
     const toY = (y) => groundY - y * scale;
 
+    if (state.events && state.events.includes('smash')) shakeLeft = CONFIG.shakeDuration;
+    ctx.save();
+    if (shakeLeft > 0) {
+      shakeLeft -= 1 / CONFIG.physicsHz;
+      const a = CONFIG.shakeAmount;
+      ctx.translate((Math.random() - 0.5) * a, (Math.random() - 0.5) * a);
+    }
+
     ctx.fillStyle = CONFIG.colors.sky;
-    ctx.fillRect(0, 0, w, h);
+    ctx.fillRect(-CONFIG.shakeAmount, -CONFIG.shakeAmount, w + CONFIG.shakeAmount * 2, h + CONFIG.shakeAmount * 2);
     drawDecor(w, h);
     ctx.fillStyle = CONFIG.colors.ground;
-    ctx.fillRect(0, groundY, w, h - groundY);
+    ctx.fillRect(-CONFIG.shakeAmount, groundY, w + CONFIG.shakeAmount * 2, h - groundY + CONFIG.shakeAmount);
 
     drawTouchHints(w, h);
     drawScore(state, w, h);
+    drawRally(state, w, h);
+    drawChaosBanner(state, w, h);
     drawNet(toX, toY, scale);
     for (const slime of state.slimes) drawSlime(slime, state.ball, toX, toY, scale);
-    drawBall(state.ball, toX, toY, scale);
+    drawBall(state, toX, toY, scale);
     if (state.winner !== null) drawWinner(state.winner, hints, w, h);
+    ctx.restore();
+  }
+
+  function drawRally(state, w, h) {
+    if (state.rally < CONFIG.rallyShowFrom || state.winner !== null) return;
+    ctx.font = `bold ${Math.round(h * CONFIG.overlay.rallySizeFrac)}px system-ui, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillStyle = CONFIG.colors.overlayText;
+    ctx.fillText(`RALLİ ×${state.rally}`, w / 2, h * CONFIG.overlay.rallyYFrac);
+  }
+
+  function drawChaosBanner(state, w, h) {
+    if (!state.activeChaos || state.winner !== null) return;
+    ctx.font = `bold ${Math.round(h * CONFIG.overlay.bannerSizeFrac)}px system-ui, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = CONFIG.colors.net;
+    ctx.fillText(CHAOS_LABELS[state.activeChaos.type] || '', w / 2, h * CONFIG.overlay.bannerYFrac);
   }
 
   function drawDecor(w, h) {
@@ -142,10 +180,11 @@ export function createRenderer(canvas) {
     ctx.fill();
   }
 
-  function drawBall(ball, toX, toY, scale) {
+  function drawBall(state, toX, toY, scale) {
+    const ball = state.ball;
     const cx = toX(ball.x);
     const cy = toY(ball.y);
-    const r = CONFIG.ballRadius * scale;
+    const r = ballRadius(state) * scale;
 
     ctx.fillStyle = CONFIG.colors.ball;
     ctx.beginPath();

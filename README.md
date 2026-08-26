@@ -31,6 +31,9 @@ küçük bir Node + WebSocket sunucusu vardır (aynı saf `js/physics.js`'i
 - Maç 7 sayıya oynanır (`matchTarget`); biten maçta iki taraf da ekrana
   dokununca aynı odada rövanş başlar. Sunucuda `MATCH_TARGET` ortam
   değişkeni maç uzunluğunu config'i değiştirmeden ayarlar.
+- Kaos: lobideki tikler (🌬️ rüzgar, 🎈 top sürprizleri, 🙃 ters kontrol)
+  ralli ortasında rastgele olaylar açar; odayı kuranın seçimi geçerlidir
+  ve rövanşlarda da sürer. Sıklık/şiddet `config.js > chaos` altında.
 - Yerelde (sunucu geliştirme): `cd server && npm install && npm start`
   (port 8787), ayrı bir uçta `python3 -m http.server 8000`; iki tarayıcı
   penceresinde `http://localhost:8000` açıp birinden oda kur, diğerinden

@@ -54,5 +54,11 @@ export function createLobby(handlers) {
     hide,
     showMessage,
     isVisible: () => el.style.display !== 'none',
+    // Seçili kaos olayları; odayı kuran belirler, katılan aynı ayarları alır.
+    getChaos: () => ({
+      wind: document.getElementById('chaosWind').checked,
+      ballModes: document.getElementById('chaosBall').checked,
+      invert: document.getElementById('chaosInvert').checked,
+    }),
   };
 }

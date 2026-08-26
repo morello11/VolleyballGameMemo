@@ -37,7 +37,9 @@ kodunu yazma; PR açıklamasına tek cümlelik not düş, kararı birlikte verir
    mini lobi: "Oda kur" / "Koda katıl")
 4. Maç akışı, ufak efektler — YAPILDI (7 sayıya maç, rövanş, sesler,
    squash & stretch, dekor)
-5. Sürpriz olaylar (yıldırım, rüzgar, top modları) — config üzerinden
+5. Sürpriz olaylar — config üzerinden. İLK DALGA YAPILDI: rüzgar,
+   dev/minik top, ters kontrol (lobide tik'le seçilir; odayı kuran
+   belirler). Sırada: yıldırım, çift top.
 
 ## Teknik kurallar
 - Vanilla JS + Canvas 2D. Build adımı yok, bağımlılık yok, framework yok.

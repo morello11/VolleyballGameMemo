@@ -33,7 +33,11 @@ export function createSound() {
 
   function playEvent(event) {
     if (event === 'hit') tone(330, 550, 0.09);
-    else if (event === 'bounce') tone(220, 160, 0.06);
+    else if (event === 'smash') tone(180, 700, 0.16, 0, 'square');
+    else if (event === 'chaos') {
+      tone(700, 700, 0.09);
+      tone(500, 500, 0.14, 0.1);
+    } else if (event === 'bounce') tone(220, 160, 0.06);
     else if (event === 'score') {
       tone(590, 590, 0.1);
       tone(790, 790, 0.16, 0.1);
