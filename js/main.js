@@ -34,8 +34,10 @@ function playEvents(events) {
 }
 
 // Maç sonu ekranında herhangi bir dokunuş/tuş: yerelde yeni maç, online'da rövanş isteği.
-function onAnyPress() {
+// Düğme ve kutulara dokunuşlar oyun akışına karışmaz.
+function onAnyPress(e) {
   sound.unlock();
+  if (e.target && e.target.closest && e.target.closest('button, input, label')) return;
   if (mode === 'local' && state.winner !== null) {
     state = createInitialState();
   } else if (mode === 'online' && net && onlineState && onlineState.winner !== null && !rematchSent) {
@@ -47,11 +49,14 @@ window.addEventListener('touchstart', onAnyPress, { passive: true });
 window.addEventListener('mousedown', onAnyPress);
 window.addEventListener('keydown', onAnyPress);
 
+const exitBtn = document.getElementById('exitBtn');
+let exitArmed = false; // yanlışlıkla çıkışa karşı iki dokunuşlu onay
+
 const lobby = createLobby({
   onSolo() {
     leaveOnline();
     state = createInitialState(lobby.getChaos());
-    lobby.hide();
+    enterGame();
   },
   onCreate() {
     openConnection((n) => n.createRoom(lobby.getChaos()));
@@ -59,14 +64,72 @@ const lobby = createLobby({
   onJoin(code) {
     openConnection((n) => n.joinRoom(code));
   },
+  onCancel() {
+    exitToLobby('');
+  },
 });
 lobby.showMenu();
 
+function enterGame() {
+  lobby.hide();
+  exitBtn.style.display = 'block';
+}
+
+function exitToLobby(message) {
+  leaveOnline();
+  exitBtn.style.display = 'none';
+  disarmExit();
+  lobby.showMenu(message);
+}
+
+exitBtn.addEventListener('click', () => {
+  if (!exitArmed) {
+    exitArmed = true;
+    exitBtn.textContent = 'Çıkılsın mı?';
+    setTimeout(disarmExit, 2000);
+    return;
+  }
+  exitToLobby('');
+});
+
+function disarmExit() {
+  exitArmed = false;
+  exitBtn.textContent = '✕';
+}
+
+// Ücretsiz sunucu boşta uyur; ilk bağlantı reddedilirse uyanana kadar dene.
 function openConnection(afterOpen) {
   leaveOnline();
-  lobby.showMessage('Bağlanılıyor...');
-  net = connectNet(onNetMessage, onNetClose);
-  net.whenOpen(() => afterOpen(net));
+  attemptConnection(afterOpen, CONFIG.connectRetries);
+}
+
+function attemptConnection(afterOpen, retriesLeft) {
+  lobby.showMessage(
+    retriesLeft === CONFIG.connectRetries
+      ? 'Bağlanılıyor...'
+      : 'Sunucu uyandırılıyor, ilk bağlantı ~1 dakika sürebilir...'
+  );
+  let opened = false;
+  net = connectNet(onNetMessage, () => {
+    if (opened) {
+      onNetClose();
+      return;
+    }
+    if (!net) return; // kullanıcı vazgeçti
+    if (retriesLeft > 0) {
+      lobby.showMessage('Sunucu uyandırılıyor, ilk bağlantı ~1 dakika sürebilir...');
+      setTimeout(() => {
+        if (net) attemptConnection(afterOpen, retriesLeft - 1);
+      }, CONFIG.connectRetryDelay * 1000);
+    } else {
+      leaveOnline();
+      lobby.showMenu('Sunucuya ulaşılamadı. İnterneti kontrol edip tekrar dene.');
+    }
+  });
+  net.whenOpen(() => {
+    opened = true;
+    afterOpen(net);
+  });
 }
 
 function onNetMessage(msg) {
@@ -75,7 +138,7 @@ function onNetMessage(msg) {
   } else if (msg.type === 'start') {
     mode = 'online';
     onlineState = null;
-    lobby.hide();
+    enterGame();
   } else if (msg.type === 'state') {
     if (onlineState && onlineState.winner !== null && msg.state.winner === null) {
       rematchSent = false; // rövanş başladı
@@ -83,8 +146,7 @@ function onNetMessage(msg) {
     onlineState = msg.state;
     playEvents(msg.state.events);
   } else if (msg.type === 'peer_left') {
-    leaveOnline();
-    lobby.showMenu('Rakip ayrıldı.');
+    exitToLobby('Rakip ayrıldı.');
   } else if (msg.type === 'error') {
     lobby.showMessage(msg.message);
   }
@@ -92,8 +154,7 @@ function onNetMessage(msg) {
 
 function onNetClose() {
   const wasOnline = mode === 'online';
-  leaveOnline();
-  lobby.showMenu(wasOnline ? 'Bağlantı koptu.' : 'Sunucuya ulaşılamadı.');
+  exitToLobby(wasOnline ? 'Bağlantı koptu.' : 'Sunucuya ulaşılamadı.');
 }
 
 function leaveOnline() {

@@ -40,6 +40,8 @@ export const CONFIG = {
   serverPort: 8787, // yerel sunucunun portu (Render'da PORT ortam değişkeni kullanılır)
   roomCodeLength: 4,
   roomCodeAlphabet: 'ACDEFGHJKLMNPRSTUVYZ2345679', // karıştırılması kolay karakterler yok
+  connectRetries: 15, // uyuyan ücretsiz sunucu uyanana kadar yeniden deneme sayısı
+  connectRetryDelay: 5, // denemeler arası saniye (15 × 5 ≈ 75 sn)
 
   // Renkler
   colors: {
