@@ -97,8 +97,8 @@ export function createRenderer(canvas) {
     ctx.save();
     ctx.globalAlpha = CONFIG.hintOpacity;
     ctx.fillStyle = CONFIG.colors.hint;
-    drawTriangle(w * CONFIG.hintLeftXFrac, y, size, -1, 0); // sol bölge: sola git
-    drawTriangle(w * CONFIG.hintRightXFrac, y, size, 1, 0); // sol yarının sağı: sağa git
+    drawTriangle(w * CONFIG.hintLeftXFrac, y, size, -1, 0); // sol yarı: bas ve sola kaydır
+    drawTriangle(w * CONFIG.hintRightXFrac, y, size, 1, 0); // sol yarı: bas ve sağa kaydır
     drawTriangle(w * CONFIG.hintJumpXFrac, y, size, 0, -1); // sağ yarı: zıpla
     ctx.restore();
   }

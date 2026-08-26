@@ -12,8 +12,9 @@ GitHub Pages ile servis edilebilir.
 2. Tarayıcıda `http://localhost:8000` adresine git
    (telefonda test için aynı ağdan `http://<bilgisayar-ip>:8000`).
 3. Masaüstü: ok tuşları ile hareket, boşluk (veya yukarı ok) ile zıpla.
-4. Telefon: yatay tut; ekranın sol yarısının solu = sola, sağı = sağa,
-   sağ yarısı = zıpla. Dikey tutunca "telefonu çevir" uyarısı çıkmalı.
+4. Telefon: yatay tut; sol yarıya bas ve başparmağını hafifçe sola/sağa
+   kaydırarak hareket et (bastığın nokta merkez olur), sağ yarı = zıpla.
+   Dikey tutunca "telefonu çevir" uyarısı çıkmalı.
 5. Kontrol listesi: top slime'dan sekmeli, hareket halindeyken vuruş
    yönlenmeli, fileden aşan top sağ duvardan geri dönmeli, yerde duran
    top kısa süre sonra slime'ın üstünde yeniden doğmalı.
