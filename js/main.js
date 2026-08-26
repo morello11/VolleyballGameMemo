@@ -50,11 +50,11 @@ window.addEventListener('keydown', onAnyPress);
 const lobby = createLobby({
   onSolo() {
     leaveOnline();
-    state = createInitialState();
+    state = createInitialState(lobby.getChaos());
     lobby.hide();
   },
   onCreate() {
-    openConnection((n) => n.createRoom());
+    openConnection((n) => n.createRoom(lobby.getChaos()));
   },
   onJoin(code) {
     openConnection((n) => n.joinRoom(code));

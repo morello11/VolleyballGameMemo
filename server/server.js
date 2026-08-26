@@ -35,7 +35,7 @@ wss.on('connection', (ws) => {
     } catch {
       return;
     }
-    if (msg.type === 'create') createRoom(ws);
+    if (msg.type === 'create') createRoom(ws, msg.chaos);
     else if (msg.type === 'join') joinRoom(ws, msg.code);
     else if (msg.type === 'input') receiveInput(ws, msg.input);
     else if (msg.type === 'rematch') voteRematch(ws);
@@ -52,7 +52,7 @@ setInterval(() => {
   }
 }, 30000);
 
-function createRoom(ws) {
+function createRoom(ws, chaos) {
   if (ws.room) return;
   const code = newRoomCode();
   const room = {
@@ -61,6 +61,8 @@ function createRoom(ws) {
     inputs: [idleInput(), idleInput()],
     state: null,
     timer: null,
+    // Odayı kuranın kaos seçimi; rövanşlar dahil odanın tüm maçlarında geçerli.
+    chaos: { wind: !!(chaos && chaos.wind), ballModes: !!(chaos && chaos.ballModes), invert: !!(chaos && chaos.invert) },
   };
   rooms.set(code, room);
   ws.room = room;
@@ -81,7 +83,7 @@ function joinRoom(ws, code) {
 }
 
 function startGame(room) {
-  room.state = createInitialState();
+  room.state = createInitialState(room.chaos);
   room.timer = setInterval(() => tick(room), 1000 / CONFIG.physicsHz);
   broadcast(room, { type: 'start' });
 }
@@ -106,7 +108,7 @@ function voteRematch(ws) {
   if (room.rematchVotes.size >= 2) {
     room.rematchVotes = null;
     room.inputs = [idleInput(), idleInput()];
-    room.state = createInitialState();
+    room.state = createInitialState(room.chaos);
   }
 }
 

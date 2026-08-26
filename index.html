@@ -69,6 +69,25 @@
       background: #f6f0e4;
       padding: 12px 0;
     }
+    #chaosRow {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 6px 14px;
+      font: 15px system-ui, sans-serif;
+      color: #333;
+      max-width: 90vw;
+    }
+    #chaosRow label {
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    #chaosRow input {
+      accent-color: #e2574c;
+      width: 16px;
+      height: 16px;
+      vertical-align: -2px;
+    }
     #soloBtn {
       background: none !important;
       color: #6b4f2a !important;
@@ -116,6 +135,12 @@
       <div id="joinRow">
         <input id="codeInput" placeholder="KOD" autocapitalize="characters" autocomplete="off" spellcheck="false">
         <button id="joinBtn">Koda katıl</button>
+      </div>
+      <div id="chaosRow">
+        <span>Kaos:</span>
+        <label><input type="checkbox" id="chaosWind"> 🌬️ Rüzgar</label>
+        <label><input type="checkbox" id="chaosBall"> 🎈 Top sürprizleri</label>
+        <label><input type="checkbox" id="chaosInvert"> 🙃 Ters kontrol</label>
       </div>
       <button id="soloBtn">Tek başına ısınma</button>
     </div>

@@ -35,8 +35,8 @@ export function connectNet(onMessage, onClose) {
       if (ws.readyState === WebSocket.OPEN) fn();
       else ws.onopen = fn;
     },
-    createRoom() {
-      send({ type: 'create' });
+    createRoom(chaos) {
+      send({ type: 'create', chaos });
     },
     joinRoom(code) {
       send({ type: 'join', code });
