@@ -4,7 +4,7 @@
 export const CONFIG = {
   // Sürüm: her güncellemede artar; lobinin köşesinde görünür ki
   // telefondaki kodun güncel olup olmadığı anında anlaşılsın.
-  version: 'v16',
+  version: 'v17',
 
   // Saha
   fieldWidth: 800,
