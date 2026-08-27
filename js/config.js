@@ -20,7 +20,8 @@ export const CONFIG = {
   maxBallSpeed: 1000,
 
   // Sayı, servis ve maç
-  servePause: 0.9, // sayı sonrası topun servis noktasında asılı beklediği saniye
+  pointPause: 0.9, // sayı sonrası topun düştüğü yerde yerde kaldığı saniye
+  servePause: 0.5, // servis topunun asılı beklediği saniye
   matchTarget: 7, // bu sayıya ulaşan maçı kazanır
 
   // Başlangıç konumları
