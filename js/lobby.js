@@ -14,6 +14,7 @@ export function createLobby(handlers) {
   // Yarı saydam zemin: arkadaki ısınma sahnesi hafifçe görünür.
   el.style.background = CONFIG.colors.sky + 'd9';
   codeInput.maxLength = CONFIG.roomCodeLength;
+  document.getElementById('version').textContent = CONFIG.version;
 
   document.getElementById('createBtn').addEventListener('click', () => handlers.onCreate());
   document.getElementById('joinBtn').addEventListener('click', () => {
