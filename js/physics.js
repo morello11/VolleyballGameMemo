@@ -10,6 +10,7 @@ export function createInitialState(chaos = {}) {
     slimes: [newSlime(0), newSlime(1)],
     ball: servedBall(0),
     score: [0, 0],
+    pointPause: 0, // sıfırdan büyükken top düştüğü yerde yatar (sayı görünür kalır)
     servePause: 0, // sıfırdan büyükken top servis noktasında asılı bekler
     lastScorer: null, // son sayıyı alan taraf (skor vurgusu için)
     winner: null, // maç bitince kazanan taraf; oyun donar
@@ -33,12 +34,30 @@ export function update(state, inputs, dt) {
     const applied = inverted ? { left: raw.right, right: raw.left, jump: raw.jump } : raw;
     updateSlime(state.slimes[side], applied, dt);
   }
+  if (state.pointPause > 0) {
+    state.pointPause -= dt;
+    if (state.pointPause <= 0) serve(state);
+    return;
+  }
   if (state.servePause > 0) {
     state.servePause -= dt;
     return;
   }
   updateChaos(state, dt);
   updateBall(state, dt);
+}
+
+// Sayı arası bitti: top servis konumuna, slimelar yerlerine.
+function serve(state) {
+  state.activeChaos = null;
+  state.ball = servedBall(state.lastScorer);
+  state.servePause = CONFIG.servePause;
+  for (const slime of state.slimes) {
+    slime.x = startX(slime.side);
+    slime.y = 0;
+    slime.vx = 0;
+    slime.vy = 0;
+  }
 }
 
 // Etkin top yarıçapı: kaos top boyutunu değiştirebilir.
@@ -155,26 +174,22 @@ function updateBall(state, dt) {
   clampBallSpeed(ball);
 }
 
-// Top yere değdi: karşı taraf sayıyı alır ve servisi kullanır.
+// Top yere değdi: karşı taraf sayıyı alır; top düştüğü yerde görünür kalır,
+// servis pointPause sonra serve() ile kurulur.
 function scorePoint(state) {
   const scorer = state.ball.x < CONFIG.fieldWidth / 2 ? 1 : 0;
   state.score[scorer] += 1;
   state.lastScorer = scorer;
-  state.ball = servedBall(scorer);
-  state.servePause = CONFIG.servePause;
-  for (const slime of state.slimes) {
-    slime.x = startX(slime.side);
-    slime.y = 0;
-    slime.vx = 0;
-    slime.vy = 0;
-  }
+  state.ball.y = ballRadius(state);
+  state.ball.vx = 0;
+  state.ball.vy = 0;
   state.rally = 0;
   state.lastHitter = null;
-  state.activeChaos = null; // sayı arası temiz sahne; sayaç yeni olaya doğru işler
   if (state.score[scorer] >= CONFIG.matchTarget) {
     state.winner = scorer;
     state.events.push('win');
   } else {
+    state.pointPause = CONFIG.pointPause;
     state.events.push('score');
   }
 }
