@@ -16,18 +16,24 @@ export function createRenderer(canvas) {
   const ctx = canvas.getContext('2d');
   let shakeLeft = 0; // smaç sarsıntısından kalan süre (yalnızca görsel)
 
-  function resize() {
+  // Boyut her karede kontrol edilir: iOS tam ekrana/yataya geçişte resize
+  // olayını eski ölçülerle verebiliyor; tampon eski kalınca görüntü geriliyor.
+  function ensureSize() {
     // 2x üstü çözünürlük gözle seçilmiyor ama kare hızını düşürüyor; sınırla.
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    canvas.width = Math.round(canvas.clientWidth * dpr);
-    canvas.height = Math.round(canvas.clientHeight * dpr);
+    const w = Math.round(canvas.clientWidth * dpr);
+    const h = Math.round(canvas.clientHeight * dpr);
+    if (canvas.width !== w || canvas.height !== h) {
+      canvas.width = w;
+      canvas.height = h;
+    }
   }
-  window.addEventListener('resize', resize);
-  resize();
+  ensureSize();
 
   // hints: {rematchWaiting, mirrored} gibi arayüz ipuçları (oyun durumu değil).
   // mirrored: katılan oyuncu sahneyi aynalanmış görür — herkes kendini solda izler.
   function draw(state, hints = {}) {
+    ensureSize();
     const w = canvas.width;
     const h = canvas.height;
     const scale = w / CONFIG.fieldWidth;
