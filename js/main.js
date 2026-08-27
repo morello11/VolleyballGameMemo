@@ -4,7 +4,7 @@
 // gelen durum çizilir). Lobi kapanana kadar arkada yerel sahne akar.
 
 import { CONFIG } from './config.js';
-import { createInitialState, update } from './physics.js';
+import { createInitialState, update, updateSlime } from './physics.js';
 import { createInput } from './input.js';
 import { createRenderer } from './render.js';
 import { createLobby } from './lobby.js';
@@ -27,6 +27,26 @@ let state = createInitialState();
 let net = null;
 let onlineState = null; // sunucudan gelen son durum
 let rematchSent = false; // maç sonunda "yeniden oyna" isteğimiz gitti mi
+let mySide = null; // online'da hangi taraftayız
+let mySlime = null; // gecikme telafisi: kendi slime'ımızın yerelde önden oynayan kopyası
+
+// Sunucu karesi gelince tahmini yumuşakça düzelt; büyük sapmada anında hizala.
+function reconcileMySlime(serverState) {
+  if (mySide === null) return;
+  const server = serverState.slimes[mySide];
+  if (!mySlime) {
+    mySlime = { ...server };
+    return;
+  }
+  const errX = server.x - mySlime.x;
+  const errY = server.y - mySlime.y;
+  if (Math.hypot(errX, errY) > CONFIG.predictSnapDist) {
+    mySlime = { ...server };
+  } else {
+    mySlime.x += errX * CONFIG.predictCorrection;
+    mySlime.y += errY * CONFIG.predictCorrection;
+  }
+}
 
 function playEvents(events) {
   if (!events || lobby.isVisible()) return; // lobi arkasındaki ısınma sahnesi sessiz
@@ -133,17 +153,20 @@ function attemptConnection(afterOpen, retriesLeft) {
 }
 
 function onNetMessage(msg) {
-  if (msg.type === 'created') {
-    lobby.showWaiting(msg.code);
+  if (msg.type === 'created' || msg.type === 'joined') {
+    mySide = msg.side;
+    if (msg.type === 'created') lobby.showWaiting(msg.code);
   } else if (msg.type === 'start') {
     mode = 'online';
     onlineState = null;
+    mySlime = null;
     enterGame();
   } else if (msg.type === 'state') {
     if (onlineState && onlineState.winner !== null && msg.state.winner === null) {
       rematchSent = false; // rövanş başladı
     }
     onlineState = msg.state;
+    reconcileMySlime(msg.state);
     playEvents(msg.state.events);
   } else if (msg.type === 'peer_left') {
     exitToLobby('Rakip ayrıldı.');
@@ -166,6 +189,8 @@ function leaveOnline() {
   mode = 'local';
   onlineState = null;
   rematchSent = false;
+  mySide = null;
+  mySlime = null;
   state = createInitialState();
 }
 
@@ -195,14 +220,34 @@ function frame(now) {
     const inputs = input.read();
     if (mode === 'online' && net) {
       net.sendInput(inputs[0]); // dokunma + ok tuşları kendi slime'ını sürer
+      predictMySlime(inputs[0]);
     } else {
       update(state, inputs, STEP);
       playEvents(state.events);
     }
     accumulator -= STEP;
   }
-  renderer.draw(mode === 'online' && onlineState ? onlineState : state, { rematchWaiting: rematchSent });
+  renderer.draw(currentDrawState(), { rematchWaiting: rematchSent });
   requestAnimationFrame(frame);
+}
+
+// Gecikme telafisi: kendi slime'ımızı sunucuyu beklemeden yerelde oynat.
+function predictMySlime(rawInput) {
+  if (!mySlime || !onlineState || onlineState.winner !== null) return;
+  const inverted = onlineState.activeChaos && onlineState.activeChaos.type === 'invert';
+  const applied = inverted
+    ? { left: rawInput.right, right: rawInput.left, jump: rawInput.jump }
+    : rawInput;
+  updateSlime(mySlime, applied, STEP);
+}
+
+function currentDrawState() {
+  if (mode !== 'online' || !onlineState) return state;
+  if (!mySlime) return onlineState;
+  return {
+    ...onlineState,
+    slimes: onlineState.slimes.map((slime, side) => (side === mySide ? mySlime : slime)),
+  };
 }
 
 requestAnimationFrame(frame);
