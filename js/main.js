@@ -4,7 +4,7 @@
 // gelen durum çizilir). Lobi kapanana kadar arkada yerel sahne akar.
 
 import { CONFIG } from './config.js';
-import { createInitialState, update, updateSlime } from './physics.js';
+import { createInitialState, update, updateSlime, extrapolateBall, extrapolateSlime } from './physics.js';
 import { createInput } from './input.js';
 import { createRenderer } from './render.js';
 import { createLobby } from './lobby.js';
@@ -29,6 +29,9 @@ let onlineState = null; // sunucudan gelen son durum
 let rematchSent = false; // maç sonunda "yeniden oyna" isteğimiz gitti mi
 let mySide = null; // online'da hangi taraftayız
 let mySlime = null; // gecikme telafisi: kendi slime'ımızın yerelde önden oynayan kopyası
+let lastStateAt = 0; // son sunucu karesinin geliş anı
+let rttSec = 0.06; // ölçülen gidiş-dönüş süresi (ping ile güncellenir)
+let pingTimer = null;
 
 // Sunucu karesi gelince tahmini yumuşakça düzelt; büyük sapmada anında hizala.
 function reconcileMySlime(serverState) {
@@ -160,14 +163,23 @@ function onNetMessage(msg) {
     mode = 'online';
     onlineState = null;
     mySlime = null;
+    if (!pingTimer) {
+      pingTimer = setInterval(() => {
+        if (net) net.sendPing(performance.now());
+      }, CONFIG.netPingInterval * 1000);
+    }
     enterGame();
   } else if (msg.type === 'state') {
     if (onlineState && onlineState.winner !== null && msg.state.winner === null) {
       rematchSent = false; // rövanş başladı
     }
     onlineState = msg.state;
+    lastStateAt = performance.now();
     reconcileMySlime(msg.state);
     playEvents(msg.state.events);
+  } else if (msg.type === 'pong') {
+    const sample = (performance.now() - msg.t) / 1000;
+    rttSec = rttSec * 0.8 + sample * 0.2; // yumuşatılmış ölçüm
   } else if (msg.type === 'peer_left') {
     exitToLobby('Rakip ayrıldı.');
   } else if (msg.type === 'error') {
@@ -191,6 +203,10 @@ function leaveOnline() {
   rematchSent = false;
   mySide = null;
   mySlime = null;
+  if (pingTimer) {
+    clearInterval(pingTimer);
+    pingTimer = null;
+  }
   state = createInitialState();
 }
 
@@ -253,12 +269,25 @@ function predictMySlime(rawInput) {
   updateSlime(mySlime, applied, STEP);
 }
 
+// Çizilecek durum: kendi slime'ımız tahminli kopya; top ve rakip, kare yaşı +
+// ölçülen tek yön gecikme kadar ileri sarılır (görüntü ağın önüne geçer).
 function currentDrawState() {
   if (mode !== 'online' || !onlineState) return state;
-  if (!mySlime) return onlineState;
+  const s = onlineState;
+  let lookahead = 0;
+  if (mySide !== null && s.winner === null) {
+    lookahead = Math.min((performance.now() - lastStateAt) / 1000 + rttSec / 2, CONFIG.netLookaheadMax);
+  }
+  const slimes = s.slimes.map((slime, side) => {
+    if (side === mySide && mySlime) return mySlime;
+    return lookahead > 0 ? extrapolateSlime(slime, lookahead) : slime;
+  });
+  // Duraklamalarda top bilerek sabit durur; o anlarda ileri sarılmaz.
+  const ballInPlay = lookahead > 0 && s.pointPause <= 0 && s.servePause <= 0;
   return {
-    ...onlineState,
-    slimes: onlineState.slimes.map((slime, side) => (side === mySide ? mySlime : slime)),
+    ...s,
+    slimes,
+    ball: ballInPlay ? extrapolateBall(s, lookahead) : s.ball,
   };
 }
 

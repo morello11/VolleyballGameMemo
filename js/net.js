@@ -47,6 +47,9 @@ export function connectNet(onMessage, onClose) {
     sendRematch() {
       send({ type: 'rematch' });
     },
+    sendPing(t) {
+      send({ type: 'ping', t });
+    },
     close() {
       closed = true;
       ws.close();

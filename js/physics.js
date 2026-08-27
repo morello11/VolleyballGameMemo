@@ -134,7 +134,11 @@ export function updateSlime(slime, inputs, dt) {
     slime.vy = 0;
   }
 
-  // Her slime kendi yarısında kalır: duvar ile filenin kendi yüzü arasında.
+  clampSlimeX(slime);
+}
+
+// Her slime kendi yarısında kalır: duvar ile filenin kendi yüzü arasında.
+function clampSlimeX(slime) {
   const netLeft = CONFIG.fieldWidth / 2 - CONFIG.netWidth / 2;
   const netRight = CONFIG.fieldWidth / 2 + CONFIG.netWidth / 2;
   if (slime.side === 0) {
@@ -142,6 +146,52 @@ export function updateSlime(slime, inputs, dt) {
   } else {
     slime.x = clamp(slime.x, netRight + CONFIG.slimeRadius, CONFIG.fieldWidth - CONFIG.slimeRadius);
   }
+}
+
+// Ağ görünümü için ileri sarma (dead reckoning): gelen kareyi gecikme kadar
+// öne alarak çizmek için kullanılır. Saftır, durumu değiştirmez; slime
+// çarpışması ve sayı kararı sunucuya aittir (top yere varırsa orada bırakılır).
+export function extrapolateBall(state, seconds) {
+  const ball = { ...state.ball };
+  const r = ballRadius(state);
+  const noEvents = [];
+  let remaining = seconds;
+  while (remaining > 0) {
+    const dt = Math.min(1 / CONFIG.physicsHz, remaining);
+    remaining -= dt;
+    if (state.activeChaos && state.activeChaos.windVx) ball.vx += state.activeChaos.windVx * dt;
+    ball.vy -= CONFIG.gravity * dt;
+    ball.x += ball.vx * dt;
+    ball.y += ball.vy * dt;
+    ball.rot += (ball.vx / r) * dt;
+    if (ball.y < r) {
+      ball.y = r;
+      break;
+    }
+    collideBallWalls(ball, r, noEvents);
+    collideBallNet(ball, r, noEvents);
+  }
+  return ball;
+}
+
+// Rakip slime'ı mevcut hızıyla ileri sarar (görsel; girdisi bilinmediği için
+// hız sabit varsayılır).
+export function extrapolateSlime(slime, seconds) {
+  const copy = { ...slime };
+  let remaining = seconds;
+  while (remaining > 0) {
+    const dt = Math.min(1 / CONFIG.physicsHz, remaining);
+    remaining -= dt;
+    copy.vy -= CONFIG.gravity * dt;
+    copy.x += copy.vx * dt;
+    copy.y += copy.vy * dt;
+    if (copy.y < 0) {
+      copy.y = 0;
+      copy.vy = 0;
+    }
+    clampSlimeX(copy);
+  }
+  return copy;
 }
 
 function updateBall(state, dt) {
