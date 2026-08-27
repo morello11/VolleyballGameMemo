@@ -25,13 +25,14 @@ export function createRenderer(canvas) {
   window.addEventListener('resize', resize);
   resize();
 
-  // hints: {rematchWaiting} gibi arayüz ipuçları (oyun durumu değil).
+  // hints: {rematchWaiting, mirrored} gibi arayüz ipuçları (oyun durumu değil).
+  // mirrored: katılan oyuncu sahneyi aynalanmış görür — herkes kendini solda izler.
   function draw(state, hints = {}) {
     const w = canvas.width;
     const h = canvas.height;
     const scale = w / CONFIG.fieldWidth;
     const groundY = h * (1 - CONFIG.groundScreenFrac);
-    const toX = (x) => x * scale;
+    const toX = hints.mirrored ? (x) => w - x * scale : (x) => x * scale;
     const toY = (y) => groundY - y * scale;
 
     if (state.events && state.events.includes('smash')) shakeLeft = CONFIG.shakeDuration;
@@ -49,12 +50,12 @@ export function createRenderer(canvas) {
     ctx.fillRect(-CONFIG.shakeAmount, groundY, w + CONFIG.shakeAmount * 2, h - groundY + CONFIG.shakeAmount);
 
     drawTouchHints(w, h);
-    drawScore(state, w, h);
+    drawScore(state, w, h, hints.mirrored);
     drawRally(state, w, h);
     drawChaosBanner(state, w, h);
     drawNet(toX, toY, scale);
     for (const slime of state.slimes) drawSlime(slime, state.ball, toX, toY, scale);
-    drawBall(state, toX, toY, scale);
+    drawBall(state, toX, toY, scale, hints.mirrored);
     if (state.winner !== null) drawWinner(state.winner, hints, w, h);
     ctx.restore();
   }
@@ -96,7 +97,7 @@ export function createRenderer(canvas) {
     }
   }
 
-  function drawScore(state, w, h) {
+  function drawScore(state, w, h, mirrored) {
     const y = h * CONFIG.scoreYFrac;
     for (const side of [0, 1]) {
       // Son sayıyı alan tarafın skoru servis beklemesi boyunca büyür.
@@ -105,8 +106,10 @@ export function createRenderer(canvas) {
       ctx.font = `bold ${size}px system-ui, sans-serif`;
       ctx.textBaseline = 'top';
       ctx.fillStyle = side === 0 ? CONFIG.colors.leftSlime : CONFIG.colors.rightSlime;
-      ctx.textAlign = side === 0 ? 'left' : 'right';
-      const x = side === 0 ? w * CONFIG.scoreXFrac : w * (1 - CONFIG.scoreXFrac);
+      // Her skor kendi slime'ının göründüğü tarafta durur.
+      const onLeft = mirrored ? side === 1 : side === 0;
+      ctx.textAlign = onLeft ? 'left' : 'right';
+      const x = onLeft ? w * CONFIG.scoreXFrac : w * (1 - CONFIG.scoreXFrac);
       ctx.fillText(String(state.score[side]), x, y);
     }
   }
@@ -181,11 +184,12 @@ export function createRenderer(canvas) {
     ctx.fill();
   }
 
-  function drawBall(state, toX, toY, scale) {
+  function drawBall(state, toX, toY, scale, mirrored) {
     const ball = state.ball;
     const cx = toX(ball.x);
     const cy = toY(ball.y);
     const r = ballRadius(state) * scale;
+    const rot = mirrored ? Math.PI - ball.rot : ball.rot;
 
     ctx.fillStyle = CONFIG.colors.ball;
     ctx.beginPath();
@@ -196,8 +200,8 @@ export function createRenderer(canvas) {
     ctx.strokeStyle = CONFIG.colors.ballSeam;
     ctx.lineWidth = Math.max(1, r / 8);
     ctx.beginPath();
-    ctx.moveTo(cx - Math.cos(ball.rot) * r * 0.8, cy - Math.sin(ball.rot) * r * 0.8);
-    ctx.lineTo(cx + Math.cos(ball.rot) * r * 0.8, cy + Math.sin(ball.rot) * r * 0.8);
+    ctx.moveTo(cx - Math.cos(rot) * r * 0.8, cy - Math.sin(rot) * r * 0.8);
+    ctx.lineTo(cx + Math.cos(rot) * r * 0.8, cy + Math.sin(rot) * r * 0.8);
     ctx.stroke();
   }
 

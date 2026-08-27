@@ -4,5 +4,6 @@ services:
     name: slime-volley-server
     runtime: node
     plan: free
+    region: frankfurt # Türkiye'ye en yakın bölge; varsayılan Oregon gecikme yaratır
     buildCommand: cd server && npm install
     startCommand: node server/server.js
