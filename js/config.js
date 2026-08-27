@@ -4,7 +4,7 @@
 export const CONFIG = {
   // Sürüm: her güncellemede artar; lobinin köşesinde görünür ki
   // telefondaki kodun güncel olup olmadığı anında anlaşılsın.
-  version: 'v15',
+  version: 'v16',
 
   // Saha
   fieldWidth: 800,
@@ -40,6 +40,8 @@ export const CONFIG = {
   // sunucu konumu yumuşakça düzeltir
   predictCorrection: 0.2, // her sunucu karesinde hatanın kapatılan payı
   predictSnapDist: 80, // bu kadar birimden büyük sapmada anında hizalan (ör. servis sıfırlaması)
+  netLookaheadMax: 0.1, // top ve rakip görüntüsünün en fazla bu kadar saniye ileri sarılması
+  netPingInterval: 2, // gecikme ölçümü (ping) aralığı, saniye
 
   // Fizik adımı
   physicsHz: 60,

@@ -39,6 +39,7 @@ wss.on('connection', (ws) => {
     else if (msg.type === 'join') joinRoom(ws, msg.code);
     else if (msg.type === 'input') receiveInput(ws, msg.input);
     else if (msg.type === 'rematch') voteRematch(ws);
+    else if (msg.type === 'ping') send(ws, { type: 'pong', t: msg.t }); // gecikme ölçümü
   });
   ws.on('close', () => leaveRoom(ws));
 });
