@@ -2,6 +2,10 @@
 // Saha mantıksal genişliği 800 birim (ekrana ölçeklenir), zemin y=0 kabul.
 
 export const CONFIG = {
+  // Sürüm: her güncellemede artar; lobinin köşesinde görünür ki
+  // telefondaki kodun güncel olup olmadığı anında anlaşılsın.
+  version: 'v15',
+
   // Saha
   fieldWidth: 800,
 
