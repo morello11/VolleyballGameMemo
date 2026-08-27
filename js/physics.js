@@ -148,49 +148,31 @@ function clampSlimeX(slime) {
   }
 }
 
-// Ağ görünümü için ileri sarma (dead reckoning): gelen kareyi gecikme kadar
-// öne alarak çizmek için kullanılır. Saftır, durumu değiştirmez; slime
-// çarpışması ve sayı kararı sunucuya aittir (top yere varırsa orada bırakılır).
-export function extrapolateBall(state, seconds) {
-  const ball = { ...state.ball };
-  const r = ballRadius(state);
-  const noEvents = [];
+// Ağ görünümü için ileri sarma (dead reckoning): gelen kareyi, oyuncuların
+// mevcut hızlarından türetilen girdilerle TAM fizikle (slime çarpışmaları
+// dahil) ileri alır. Saftır, verilen durumu değiştirmez. Skor/kazanan gibi
+// kararlar sunucuya aittir; kopyada oluşsalar bile geri alınır.
+export function extrapolateState(state, seconds) {
+  const copy = structuredClone(state);
+  const inverted = copy.activeChaos && copy.activeChaos.type === 'invert';
+  const inputs = copy.slimes.map((slime) => {
+    const left = slime.vx < 0;
+    const right = slime.vx > 0;
+    // update() ters kontrolde girdileri çevirir; hızdan türettiğimiz yön
+    // zaten gerçek hareket olduğundan önceden ters çevirip etkisizleştiririz.
+    return inverted ? { left: right, right: left, jump: false } : { left, right, jump: false };
+  });
   let remaining = seconds;
   while (remaining > 0) {
     const dt = Math.min(1 / CONFIG.physicsHz, remaining);
     remaining -= dt;
-    if (state.activeChaos && state.activeChaos.windVx) ball.vx += state.activeChaos.windVx * dt;
-    ball.vy -= CONFIG.gravity * dt;
-    ball.x += ball.vx * dt;
-    ball.y += ball.vy * dt;
-    ball.rot += (ball.vx / r) * dt;
-    if (ball.y < r) {
-      ball.y = r;
-      break;
-    }
-    collideBallWalls(ball, r, noEvents);
-    collideBallNet(ball, r, noEvents);
+    update(copy, inputs, dt);
   }
-  return ball;
-}
-
-// Rakip slime'ı mevcut hızıyla ileri sarar (görsel; girdisi bilinmediği için
-// hız sabit varsayılır).
-export function extrapolateSlime(slime, seconds) {
-  const copy = { ...slime };
-  let remaining = seconds;
-  while (remaining > 0) {
-    const dt = Math.min(1 / CONFIG.physicsHz, remaining);
-    remaining -= dt;
-    copy.vy -= CONFIG.gravity * dt;
-    copy.x += copy.vx * dt;
-    copy.y += copy.vy * dt;
-    if (copy.y < 0) {
-      copy.y = 0;
-      copy.vy = 0;
-    }
-    clampSlimeX(copy);
-  }
+  copy.score = state.score.slice();
+  copy.winner = state.winner;
+  copy.lastScorer = state.lastScorer;
+  copy.rally = state.rally;
+  copy.events = []; // tahminden olay (ses/sarsıntı) sızmasın
   return copy;
 }
 

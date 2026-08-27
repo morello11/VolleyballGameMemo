@@ -4,7 +4,7 @@
 // gelen durum çizilir). Lobi kapanana kadar arkada yerel sahne akar.
 
 import { CONFIG } from './config.js';
-import { createInitialState, update, updateSlime, extrapolateBall, extrapolateSlime } from './physics.js';
+import { createInitialState, update, updateSlime, extrapolateState } from './physics.js';
 import { createInput } from './input.js';
 import { createRenderer } from './render.js';
 import { createLobby } from './lobby.js';
@@ -269,26 +269,27 @@ function predictMySlime(rawInput) {
   updateSlime(mySlime, applied, STEP);
 }
 
-// Çizilecek durum: kendi slime'ımız tahminli kopya; top ve rakip, kare yaşı +
-// ölçülen tek yön gecikme kadar ileri sarılır (görüntü ağın önüne geçer).
+// Çizilecek durum: gelen kare, kare yaşı + ölçülen tek yön gecikme kadar tam
+// fizikle ileri sarılır (görüntü ağın önüne geçer); kendi slime'ımız tahminli
+// kopyayla değiştirilir. Ses/sarsıntı olayları gerçek kareden alınır.
 function currentDrawState() {
   if (mode !== 'online' || !onlineState) return state;
   const s = onlineState;
-  let lookahead = 0;
+  let drawn = s;
   if (mySide !== null && s.winner === null) {
-    lookahead = Math.min((performance.now() - lastStateAt) / 1000 + rttSec / 2, CONFIG.netLookaheadMax);
+    const lookahead = Math.min((performance.now() - lastStateAt) / 1000 + rttSec / 2, CONFIG.netLookaheadMax);
+    if (lookahead > 0) {
+      drawn = extrapolateState(s, lookahead);
+      drawn.events = s.events;
+    }
   }
-  const slimes = s.slimes.map((slime, side) => {
-    if (side === mySide && mySlime) return mySlime;
-    return lookahead > 0 ? extrapolateSlime(slime, lookahead) : slime;
-  });
-  // Duraklamalarda top bilerek sabit durur; o anlarda ileri sarılmaz.
-  const ballInPlay = lookahead > 0 && s.pointPause <= 0 && s.servePause <= 0;
-  return {
-    ...s,
-    slimes,
-    ball: ballInPlay ? extrapolateBall(s, lookahead) : s.ball,
-  };
+  if (mySlime) {
+    drawn = {
+      ...drawn,
+      slimes: drawn.slimes.map((slime, side) => (side === mySide ? mySlime : slime)),
+    };
+  }
+  return drawn;
 }
 
 requestAnimationFrame(frame);
