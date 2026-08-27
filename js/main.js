@@ -219,16 +219,28 @@ function frame(now) {
   while (accumulator >= STEP) {
     const inputs = input.read();
     if (mode === 'online' && net) {
-      net.sendInput(inputs[0]); // dokunma + ok tuşları kendi slime'ını sürer
-      predictMySlime(inputs[0]);
+      const mine = toWorldInput(inputs[0]); // dokunma + ok tuşları kendi slime'ını sürer
+      net.sendInput(mine);
+      predictMySlime(mine);
     } else {
       update(state, inputs, STEP);
       playEvents(state.events);
     }
     accumulator -= STEP;
   }
-  renderer.draw(currentDrawState(), { rematchWaiting: rematchSent });
+  renderer.draw(currentDrawState(), { rematchWaiting: rematchSent, mirrored: isMirrored() });
   requestAnimationFrame(frame);
+}
+
+// Katılan oyuncu (taraf 1) sahneyi aynalanmış görür — herkes kendini solda izler.
+function isMirrored() {
+  return mode === 'online' && mySide === 1;
+}
+
+// Aynalı görünümde ekrandaki sağ/sol, dünya koordinatında terstir.
+function toWorldInput(raw) {
+  if (!isMirrored()) return raw;
+  return { left: raw.right, right: raw.left, jump: raw.jump };
 }
 
 // Gecikme telafisi: kendi slime'ımızı sunucuyu beklemeden yerelde oynat.

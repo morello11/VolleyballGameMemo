@@ -32,6 +32,8 @@ küçük bir Node + WebSocket sunucusu vardır (aynı saf `js/physics.js`'i
 
 - İki telefon: biri **"Oda kur"** deyip 4 harfli kodu söyler, diğeri
   **"Koda katıl"** ile kodu girer; oyun ikisinde birden başlar.
+- Herkes kendini kendi ekranının **solunda** görür (katılan oyuncunun
+  görüntüsü ve kontrolleri aynalanır); rakip her zaman karşıdadır.
 - Maç 7 sayıya oynanır (`matchTarget`); biten maçta iki taraf da ekrana
   dokununca aynı odada rövanş başlar. Sunucuda `MATCH_TARGET` ortam
   değişkeni maç uzunluğunu config'i değiştirmeden ayarlar.
