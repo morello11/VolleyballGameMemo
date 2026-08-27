@@ -15,9 +15,9 @@ export const CONFIG = {
   gravity: 1500,
   jumpSpeed: 750,
   moveSpeed: 400,
-  ballBounceSlime: 1.0,
+  ballBounceSlime: 0.92, // 1.0 çok hızlıydı; his geri bildirimiyle söndürüldü
   ballBounceWall: 0.85, // duvar ve file için ortak sekme katsayısı
-  maxBallSpeed: 1100,
+  maxBallSpeed: 1000,
 
   // Sayı, servis ve maç
   servePause: 0.9, // sayı sonrası topun servis noktasında asılı beklediği saniye
@@ -28,8 +28,13 @@ export const CONFIG = {
   ballSpawnHeight: 300, // servis topu slime'ın üstünde bu yükseklikte doğar
 
   // Dokunmatik kontrol
-  moveDragDeadZone: 15, // hareket için başparmağın merkezden kayması gereken piksel
+  moveDragDeadZone: 12, // hareket için başparmağın merkezden kayması gereken piksel
   moveDragPullback: 25, // yön basılıyken bu kadar geri çekilmek durdurur ve merkezi sıfırlar
+
+  // Online gecikme telafisi: kendi slime'ın yerelde anında oynar,
+  // sunucu konumu yumuşakça düzeltir
+  predictCorrection: 0.2, // her sunucu karesinde hatanın kapatılan payı
+  predictSnapDist: 80, // bu kadar birimden büyük sapmada anında hizalan (ör. servis sıfırlaması)
 
   // Fizik adımı
   physicsHz: 60,
@@ -86,7 +91,7 @@ export const CONFIG = {
 
   // Sabit tatlar
   smashSpeedFrac: 0.85, // vuruş sonrası hız bunun üstündeyse smaç sayılır (sarsıntı + ses)
-  rallyShowFrom: 6, // ralli sayacı bu vuruştan itibaren görünür
+  rallyShowFrom: 4, // ralli sayacı bu karşılıklı vuruştan itibaren görünür
 
   // Görsel oranlar ve ölçüler
   groundScreenFrac: 0.12, // zeminin ekran yüksekliğindeki payı

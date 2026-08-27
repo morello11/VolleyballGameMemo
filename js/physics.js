@@ -14,7 +14,8 @@ export function createInitialState(chaos = {}) {
     lastScorer: null, // son sayıyı alan taraf (skor vurgusu için)
     winner: null, // maç bitince kazanan taraf; oyun donar
     events: [], // bu tikte olanlar ('hit', 'smash', 'bounce', 'score', 'win', 'chaos')
-    rally: 0, // bu sayıdaki üst üste vuruş sayısı
+    rally: 0, // bu sayıdaki karşılıklı vuruş sayısı (taraf değiştikçe artar)
+    lastHitter: null, // topa son vuran taraf
     chaos: { wind: !!chaos.wind, ballModes: !!chaos.ballModes, invert: !!chaos.invert },
     chaosTimer: nextChaosDelay(), // bir sonraki kaos olayına kalan saniye
     activeChaos: null, // {type, timeLeft, windVx?, ballScale?}
@@ -97,7 +98,8 @@ function startX(side) {
   return side === 0 ? CONFIG.slimeStartX : CONFIG.fieldWidth - CONFIG.slimeStartX;
 }
 
-function updateSlime(slime, inputs, dt) {
+// Dışa da açık: online modda istemci kendi slime'ını bununla önden oynatır.
+export function updateSlime(slime, inputs, dt) {
   slime.vx = 0;
   if (inputs.left) slime.vx -= CONFIG.moveSpeed;
   if (inputs.right) slime.vx += CONFIG.moveSpeed;
@@ -142,7 +144,11 @@ function updateBall(state, dt) {
   for (const slime of state.slimes) {
     const hitType = collideBallSlime(ball, r, slime);
     if (hitType) {
-      state.rally += 1;
+      // Ralli karşılıklı vuruşları sayar; kendi kafanda sektirmek saymaz.
+      if (state.lastHitter !== slime.side) {
+        state.rally += 1;
+        state.lastHitter = slime.side;
+      }
       state.events.push(hitType);
     }
   }
@@ -163,6 +169,7 @@ function scorePoint(state) {
     slime.vy = 0;
   }
   state.rally = 0;
+  state.lastHitter = null;
   state.activeChaos = null; // sayı arası temiz sahne; sayaç yeni olaya doğru işler
   if (state.score[scorer] >= CONFIG.matchTarget) {
     state.winner = scorer;

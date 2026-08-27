@@ -19,6 +19,10 @@ küçük bir Node + WebSocket sunucusu vardır (aynı saf `js/physics.js`'i
 3. Telefon: yatay tut; sol yarıya bas ve başparmağını hafifçe sola/sağa
    kaydırarak hareket et (bastığın nokta merkez olur), sağ yarı = zıpla.
    Dikey tutunca "telefonu çevir" uyarısı çıkmalı.
+4. iPhone'da tam ekran: Safari'de **Paylaş → Ana Ekrana Ekle** — oyun
+   uygulama gibi, Safari çubuğu olmadan açılır (Android'de ekrana ilk
+   dokunuş zaten tam ekran yapar; istenirse Chrome "Ana ekrana ekle"
+   ile de kurulabilir).
 4. Kontrol listesi: top slime'dan sekmeli, hareket halindeyken vuruş
    yönlenmeli, top yere düşünce karşı taraf sayı almalı, kısa bir
    duraksamadan sonra servis sayıyı alanda olmalı, skor üstte iki yanda

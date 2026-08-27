@@ -55,6 +55,8 @@ kodunu yazma; PR açıklamasına tek cümlelik not düş, kararı birlikte verir
   - `js/sound.js` — sentezlenmiş mini ses efektleri (maç akışı adımıyla eklendi)
   - `server/server.js` — oda tabanlı oyun sunucusu (aynı physics.js'i koşar)
   - `render.yaml` — Render tek tık dağıtım tarifi
+  - `manifest.webmanifest` + `icons/` — PWA (iPhone'da "Ana Ekrana Ekle"
+    ile tam ekran)
 - En önemli mimari kural: `physics.js` saf olacak —
   `update(state, inputs, dt)` şeklinde, DOM/canvas'a asla dokunmayan
   fonksiyonlar. Render ve input ayrı. (İleride aynı fizik kodu sunucuda

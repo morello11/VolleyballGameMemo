@@ -17,7 +17,8 @@ export function createRenderer(canvas) {
   let shakeLeft = 0; // smaç sarsıntısından kalan süre (yalnızca görsel)
 
   function resize() {
-    const dpr = window.devicePixelRatio || 1;
+    // 2x üstü çözünürlük gözle seçilmiyor ama kare hızını düşürüyor; sınırla.
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
     canvas.width = Math.round(canvas.clientWidth * dpr);
     canvas.height = Math.round(canvas.clientHeight * dpr);
   }
